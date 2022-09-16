@@ -68,9 +68,30 @@ import RNBlues from 'react-native-blues';
 RNBlues;
 ```
 
+## Troubleshooting
+
+### 1. build error: Could not find method compile()
+```
+* What went wrong:
+A problem occurred evaluating project ':react-native-blues'.
+> Could not find method compile() for arguments [com.facebook.react:react-native:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.
+```
+
+#### solution
+1. open `{/your/rn/project/directory}/node_modules/react-native-blues/android/build.gradle`.
+2. modify `compile` -> `implementation` in `dependencies` closure.
+```groovy
+...
+dependencies {
+    implementation 'com.facebook.react:react-native:+'
+}
+```
+
+
 ## API Docs
 
 (updating)
+
 
 ## Ref
 

@@ -37,8 +37,9 @@ public class RNBluesModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void startScan() {
-        blues.startDiscovery();
+    public void startScan(Promise promise) {
+        boolean success = blues.startDiscovery();
+        promise.resolve(success);
     }
 
     @ReactMethod
@@ -47,8 +48,9 @@ public class RNBluesModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void stopScan() {
-        blues.stopDiscovery();
+    public void stopScan(Promise promise) {
+        boolean success = blues.stopDiscovery();
+        promise.resolve(success);
     }
 
     @ReactMethod
@@ -64,8 +66,9 @@ public class RNBluesModule extends ReactContextBaseJavaModule {
     public void disconnectA2dp(Promise promise) {
         if (blues != null) {
             blues.disconnectA2dp(promise);
+        } else {
+            promise.reject("BLUES_ERROR", "Blues initiation failed.");
         }
-        promise.resolve(true);
     }
 
     @ReactMethod

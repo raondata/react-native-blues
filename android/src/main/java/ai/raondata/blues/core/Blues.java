@@ -25,16 +25,7 @@ public class Blues {
     private ReactApplicationContext mReactContext;
     private final BluesService bluesService;
     private BluetoothReceiver bluetoothReceiver;
-    private boolean isScanning = false;
     private boolean isConnecting = false;
-
-    public boolean isScanning() {
-        return isScanning;
-    }
-
-    public void setScanning(boolean scanning) {
-        isScanning = scanning;
-    }
 
     public boolean isConnecting() {
         return isConnecting;
@@ -62,18 +53,16 @@ public class Blues {
         promise.resolve(deviceList);
     }
 
-    public void startDiscovery() {
-        setScanning(true);
-        bluetoothAdapter.startDiscovery();
+    public boolean startDiscovery() {
+        return bluetoothAdapter.startDiscovery();
     }
 
-    public void stopDiscovery() {
-        while(true){
-            if (bluetoothAdapter.cancelDiscovery()){
-                break;
-            }
-        }
-        setScanning(false);
+    public boolean isDiscovering() {
+        return bluetoothAdapter.isDiscovering();
+    }
+
+    public boolean stopDiscovery() {
+        return bluetoothAdapter.cancelDiscovery();
     }
 
     public void connectA2dp(String id, Promise promise) {
@@ -93,11 +82,7 @@ public class Blues {
     public void disconnectA2dp(Promise promise) {
         bluesService.disconnectA2dp();
         boolean success = bluesService.removeBond();
-        if (success) {
-            promise.resolve(success);
-        } else {
-            promise.reject("BLUES_DISCONNECT_ERROR", "Bluetooth device disconnection error");
-        }
+        promise.resolve(success);
     }
 
     private void registerBluetoothDeviceReceiver() {
@@ -127,7 +112,6 @@ public class Blues {
             }
 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                setScanning(false);
                 RNBluesModule.sendEvent("onStopScan", "");
             }
 

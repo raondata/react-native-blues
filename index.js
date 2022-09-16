@@ -6,20 +6,19 @@ const eventEmitter = new NativeEventEmitter(RNBlues);
 const eventMap = {};
 
 RNBlues.removeListener = (eventName: String) => {
-  console.log('[RNBlues.removeListener]');
   if (Object.keys(eventMap).includes(eventName)) {
     eventMap[eventName].remove();
     delete eventMap[eventName];
+    console.log(`[RNBlues.removeListener] event ${eventName} is removed.`);
   } else {
     throw new Error(`${eventName} 이벤트는 react-native-blues에 등록되지 않았습니다.`);
   }
 };
 
 RNBlues.on = (eventName: String, handler: Function) => {
-  console.log('[RNBlues.on]');
   if (Object.keys(eventMap).includes(eventName)) {
     console.log(`[RNBlues.on] event ${eventName} already registered.`);
-    eventMap[eventName].remove();
+    RNBlues.removeListener(eventName);
   }
   eventMap[eventName] = eventEmitter.addListener(eventName, handler);
   return eventMap[eventName];
@@ -27,9 +26,8 @@ RNBlues.on = (eventName: String, handler: Function) => {
 
 
 RNBlues.removeAllEvents = () => {
-  Object.entries(eventMap).forEach(([eventName, e]) => {
-    e.remove();
-    delete eventMap[eventName];
+  Object.keys(eventMap).forEach((eventName) => {
+    RNBlues.removeListener(eventName);
   });
 };
 

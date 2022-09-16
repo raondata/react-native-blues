@@ -32,6 +32,7 @@ class BluesService {
                 }
             }
         }, BluetoothProfile.A2DP);
+
     }
 
     public void connectA2dp(BluetoothDevice device, Promise promise) {
