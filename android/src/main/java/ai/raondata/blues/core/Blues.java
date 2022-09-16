@@ -63,23 +63,29 @@ public class Blues {
     }
 
     public void startDiscovery() {
-        isScanning = true;
+        setScanning(true);
         bluetoothAdapter.startDiscovery();
     }
 
     public void stopDiscovery() {
-        bluetoothAdapter.cancelDiscovery();
-        isScanning = false;
+        while(true){
+            if (bluetoothAdapter.cancelDiscovery()){
+                break;
+            }
+        }
+        setScanning(false);
     }
 
     public void connectA2dp(String id, Promise promise) {
-        bluetoothAdapter.cancelDiscovery();
+        stopDiscovery();
+        setConnecting(true);
         connectPromise = promise;
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(id);
         if (device != null) {
             boolean isok = bluesService.createBond(device);
             bluesService.connectA2dp(device, promise);
         } else {
+            setConnecting(false);
             promise.reject("BLUES_CONNECTION_ERROR", "Bluetooth device not found.");
         }
     }
@@ -105,6 +111,10 @@ public class Blues {
         mReactContext.registerReceiver(bluetoothReceiver, intentFilter);
     }
 
+    public WritableMap getConnectedA2dpDevice() {
+        return Util.deviceToWritableMap(bluesService.mmDevice);
+    }
+
     public class BluetoothReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -117,18 +127,20 @@ public class Blues {
             }
 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                RNBluesModule.sendEvent("scanStop", "");
+                setScanning(false);
+                RNBluesModule.sendEvent("onStopScan", "");
             }
 
             if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(action)) {
                 int currentState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, -1);
+                setConnecting(false);
                 if (currentState == BluetoothA2dp.STATE_CONNECTED) {
                     connectPromise.resolve("A2dp connection succeeded.");
-                    RNBluesModule.sendEvent("connectSucceeded", "");
+                    RNBluesModule.sendEvent("onConnected", "");
                 }
                 if (currentState == BluetoothA2dp.STATE_DISCONNECTED) {
-                    RNBluesModule.sendEvent("connectDisconnect", "");
-                    connectPromise.reject("BLUES_CONNECTION_ERROR", "A2dp connection failed.");
+                    connectPromise.reject("BLUES_CONNECTION_ERROR", "A2dp device disconnected.");
+                    RNBluesModule.sendEvent("onDisconnected", "");
                 }
             }
 

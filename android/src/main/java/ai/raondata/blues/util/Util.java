@@ -9,11 +9,13 @@ public class Util {
     public static WritableMap deviceToWritableMap(BluetoothDevice device) {
         WritableMap params = Arguments.createMap();
 
-        params.putString("name", device.getName());
-        params.putString("id", device.getAddress());
+        if (device != null) {
+            params.putString("name", device.getName());
+            params.putString("id", device.getAddress());
 
-        if (device.getBluetoothClass() != null) {
-            params.putInt("class", device.getBluetoothClass().getDeviceClass());
+            if (device.getBluetoothClass() != null) {
+                params.putInt("class", device.getBluetoothClass().getDeviceClass());
+            }
         }
 
         return params;

@@ -42,6 +42,11 @@ public class RNBluesModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void getConnectedA2dpDevice(Promise promise) {
+        promise.resolve(blues.getConnectedA2dpDevice());
+    }
+
+    @ReactMethod
     public void stopScan() {
         blues.stopDiscovery();
     }
@@ -51,7 +56,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule {
         if (blues != null) {
             blues.connectA2dp(id, promise);
         } else {
-            promise.reject("BLUES_CONNECTION_FAILED", "A2dp bluetooth device connection failed.");
+            promise.reject("BLUES_ERROR", "Blues initiation failed.");
         }
     }
 
