@@ -1,9 +1,16 @@
 import TrackPlayer from 'react-native-track-player';
 
-export const storagePath = 'file:///storage/emulated/0/Music/Srrk/';
+export const storagePath = '/storage/emulated/0/Music/Srrk/';
+export const remoteUrl = 'https://srrk.s3.ap-northeast-2.amazonaws.com/audio/';
 
-export const init = () => {
-  TrackPlayer.setupPlayer();
+export const init = async () => {
+  try {
+    await TrackPlayer.setupPlayer();
+  } catch (e) {
+    if (e.toString().includes('already')) {
+      return;
+    }
+  }
 };
 
 
@@ -19,3 +26,7 @@ export const play = async (name, path) => {
   await TrackPlayer.setVolume(1);
   await TrackPlayer.play();
 };
+
+export const close = async () => {
+  // await TrackPlayer.close();
+}

@@ -1,4 +1,4 @@
-package com.rnbluestest;
+package ai.raoidata.blues.example;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

@@ -135,7 +135,7 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId "com.rnbluestest"
+        applicationId "ai.raoidata.blues.example"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -264,6 +264,8 @@ dependencies {
 
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+    implementation 'org.slf4j:slf4j-simple:1.7.32'
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 

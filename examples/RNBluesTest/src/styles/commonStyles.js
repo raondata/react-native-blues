@@ -35,6 +35,7 @@ export const commonStyles = StyleSheet.create({
     fontSize: 12,
   },
   itemSubtitle: {
+    color: '#777',
     fontSize: 11
   },
   footer: {

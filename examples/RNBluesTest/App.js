@@ -1,10 +1,10 @@
 import React from 'react';
-import { DeviceListScreen } from './src/pages';
+import { SongListScreen } from './src/pages';
 
 const App = () => {
   return (
     <>
-      <DeviceListScreen />
+      <SongListScreen />
     </>
   );
 };

@@ -1,4 +1,4 @@
-package com.rnbluestest.newarchitecture.components;
+package ai.raoidata.blues.example.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

@@ -1,4 +1,4 @@
-package com.rnbluestest.newarchitecture.modules;
+package ai.raoidata.blues.example.newarchitecture.modules;
 
 import com.facebook.jni.HybridData;
 import com.facebook.react.ReactPackage;

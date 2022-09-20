@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import RNBlues from "react-native-blues";
 
 export const setEvent = (eventName, listener) => {
@@ -14,6 +13,18 @@ export const removeAllEvents = () => {
   console.log('[bluetooth] removing all events of RNBlues..');
   RNBlues.removeAllEvents();
 };
+
+export const isBluetoothAvailable = async () => {
+  return await RNBlues.isBluetoothAvailable();
+};
+
+export const isBluetoothEnabled = async () => {
+  return await RNBlues.isBluetoothEnabled();
+}
+
+export const requestBluetoothEnabled = async () => {
+  return await RNBlues.requestBluetoothEnabled();
+}
 
 export const getPairedDeviceList = async () => {
   return await RNBlues.deviceList();
@@ -44,24 +55,6 @@ export const disconnect = async () => {
   await RNBlues.disconnectA2dp();
 };
 
-export const requestPermissions = () => {
-  if (Platform.OS === 'android'){
-    if (Platform.Version >= 23) {
-      PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
-        if (result) {
-          console.log("Permission is OK");
-        } else {
-          PermissionsAndroid.requestPermission(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
-            if (result) {
-              console.log("User accept");
-            } else {
-              console.log("User refuse");
-            }
-          });
-        }
-      });
-    } else {
-      console.log("android version is under 23.");
-    }
-  }
-};
+export const close = () => {
+  RNBlues.close();
+}

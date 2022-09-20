@@ -1,3 +1,3 @@
-import DeviceListScreen from "./DeviceListScreen";
+import SongListScreen from "./SongListScreen";
 
-export { DeviceListScreen };
+export { SongListScreen };

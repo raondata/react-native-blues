@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, LogBox, Text, TouchableHighlight, View } from 'react-native';
+import { ActivityIndicator, FlatList, LogBox, Text, ToastAndroid, TouchableHighlight, View } from 'react-native';
+import * as Auth from '../modules/auth';
 import * as Blues from "../modules/bluetooth";
 import * as Music from '../modules/music';
+import { remoteUrl } from "../modules/music";
 import * as Storage from '../modules/storage';
 import { commonStyles } from "../styles/commonStyles";
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
@@ -13,51 +15,59 @@ const SongListScreen = () => {
   const [songList, setSongList] = useState([]);
   const [packetText, setPacketText] = useState(null);
 
-  const setEvents = () => {
-    Blues.setEvent("onScan", async (device) => {
-      console.log('>> onScan:', device);
-      if (device.name === 'MH-M38') {
-        console.log('>> onScan(): speaker found. start connecting...');
-        const isScanStopped = await Blues.stopScan();
-        if (isScanStopped) {
-          try {
-            const conn = await Blues.connect(device.id);
-            console.log('>> onScan: conn=', conn);
-          } catch (e) {
-            console.error('error occurred when connecting:', e);
-          }
-        } else {
-          console.error('>> onScan: error: scan could not stop.');
-        }
-      }
-    });
-    Blues.setEvent("onStopScan", () => {
-      console.log('>> onStopScan: scanning stopped.');
-      setScanning(false);
-    });
-    Blues.setEvent("onConnected", () => {
-      console.log('>> onConnected');
-      setConnected(true);
-    });
-    Blues.setEvent("onDisconnected", () => {
-      console.log('>> onDisconnected');
-      setConnected(false);
-    });
-  };
-
-  const readMusicList = async () => {
-    Music.init();
-    const musicFileList = await Storage.read(Music.storagePath);
-    setSongList(musicFileList);
-  };
-  
   useEffect(() => {
     console.log('>> useEffect()');
-    Blues.requestPermissions();
-    setEvents();
-    readMusicList();
+    Auth.requestStoragePermission().then(async (allowed) => {
+      console.log('storage permission:', allowed);
+      if (allowed == "granted") {
+        Music.init();
+        // const musicFileList = await Storage.read(Music.storagePath);
+        const musicFileList = Storage.listRemote(remoteUrl);
+        setSongList(musicFileList);
+      }
+    });
+
+    Auth.enablePermissions().then(res => {
+      Blues.setEvent("deviceDiscovered", async (device) => {
+        console.log('>> deviceDiscovered:', device);
+        if (device.name === 'MH-M38') {
+          console.log('>> deviceDiscovered(): speaker found. start connecting...');
+          const isScanStopped = await Blues.stopScan();
+          if (isScanStopped) {
+            try {
+              const conn = await Blues.connect(device.id);
+              console.log('>> deviceDiscovered: conn=', conn);
+            } catch (e) {
+              console.error('error occurred when connecting:', e);
+            }
+          } else {
+            console.error('>> deviceDiscovered: error: scan could not stop.');
+          }
+        }
+      });
+      Blues.setEvent("scanStarted", () => {
+        console.log('>> scanStarted: scanning started.');
+      });
+      Blues.setEvent("scanStopped", () => {
+        console.log('>> scanStopped: scanning stopped.');
+        setScanning(false);
+      });
+      Blues.setEvent("deviceConnected", () => {
+        console.log('>> deviceConnected');
+        setConnected(true);
+      });
+      Blues.setEvent("deviceDisconnected", () => {
+        console.log('>> deviceDisconnected');
+        setConnected(false);
+      });
+    }).catch((e) => {
+      console.error(`블루투스 권한 요청 중 오류가 발생했습니다. ${e}`);
+      ToastAndroid.show(`블루투스 권한 요청 중 오류가 발생했습니다. ${e}`, ToastAndroid.LONG);
+    });
+    
     const onUnmount = () => {
       Blues.removeAllEvents();
+      Music.close();
     };
     
     return onUnmount;
