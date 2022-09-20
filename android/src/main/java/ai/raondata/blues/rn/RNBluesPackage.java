@@ -11,6 +11,13 @@ import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.bridge.JavaScriptModule;
 
 public class RNBluesPackage implements ReactPackage {
+    /**
+     * Provides the {@link RNBluesModule} to the {@link com.facebook.react.ReactApplication}.
+     *
+     * @param reactContext the {@link ReactApplicationContext} provided by the React Native
+     *                     application
+     * @return array of modules provided by this package
+     */
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
       return Collections.singletonList(new RNBluesModule(reactContext));
@@ -21,6 +28,13 @@ public class RNBluesPackage implements ReactPackage {
       return Collections.emptyList();
     }
 
+
+    /**
+     * There are currently no {@link ViewManager}(s) provided by this module.
+     *
+     * @param reactContext provided by the React Native application
+     * @return empty list of {@link ViewManager}(s)
+     */
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
       return Collections.emptyList();

@@ -1,6 +1,6 @@
-import { NativeEventEmitter, NativeModules } from 'react-native';
-
+import { LogBox, NativeEventEmitter, NativeModules } from 'react-native';
 const { RNBlues } = NativeModules;
+LogBox.ignoreLogs(['new NativeEventEmitter']);
 
 const eventEmitter = new NativeEventEmitter(RNBlues);
 const eventMap = {};
