@@ -9,7 +9,7 @@ LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by mes
 
 const SongListScreen = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [isBluetoothEnabled, setBluetoothEnabled] = useState(false);
+  const [isBluetoothEnabled, setBluetoothEnabled] = useState((async()=>await Blues.isBluetoothEnabled())());
   const [isScanning, setScanning] = useState(false);
   const [isConnected, setConnected] = useState(false);
   const [songList, setSongList] = useState([]);
@@ -23,14 +23,17 @@ const SongListScreen = () => {
     const setEvents = () => {
       console.log('setEvents()');
 
-      Blues.setEvent("bluetoothStateChanged", async () => {
+      Blues.setEvent("bluetoothStateChanging", () => {
+        console.log('>> bluetoothStateChanging');
+      });
+      Blues.setEvent("bluetoothStateChanged", () => {
         console.log('>> bluetoothStateChanged');
       });
-      Blues.setEvent("bluetoothEnabled", async () => {
-        console.log('>> bluetoothEnabled');
+      Blues.setEvent("bluetoothEnabled", () => {
         ToastAndroid.show("블루투스가 활성화되었습니다.", ToastAndroid.LONG);
+        setBluetoothEnabled(true);
       });
-      Blues.setEvent("bluetoothDisabled", async () => {
+      Blues.setEvent("bluetoothDisabled", () => {
         console.log('>> bluetoothDisabled');
         ToastAndroid.show("블루투스가 비활성화되었습니다.", ToastAndroid.LONG);
         setBluetoothEnabled(false);
@@ -71,17 +74,15 @@ const SongListScreen = () => {
     };
 
     setEvents();
-    Auth.requestPermissions().then(async (res) => {
-      setBluetoothEnabled(res);
-      if (await Blues.isBluetoothEnabled()) {
-        ToastAndroid.show("블루투스가 이미 활성화되어있습니다.", ToastAndroid.LONG);
-      } else {
-        showPopupVisible(true);
-      }
-
-      Music.init();
-      const musicFileList = Music.list();
-      setSongList(musicFileList);
+    Auth.requestPermissions().then((r) => {
+      Blues.isBluetoothEnabled().then(enabled => {
+        setBluetoothEnabled(enabled);
+        showPopupVisible(!enabled);
+      }).then(() => {
+        Music.init();
+        const musicFileList = Music.list();
+        setSongList(musicFileList);
+      });
     });
     
     const onUnmount = () => {
@@ -182,8 +183,14 @@ const SongListScreen = () => {
           showPopupVisible(false);
         }}
         onConfirm={async () => {
-          showPopupVisible(false);
-          await Blues.enableBluetooth();
+          await Blues.enableBluetooth(() => {
+            ToastAndroid.show("블루투스가 이미 활성화되어있습니다.", ToastAndroid.LONG);
+          }).then(res => {
+            if (res) {
+              setBluetoothEnabled(true);
+              showPopupVisible(false);
+            }
+          });
         }}
       />
     </View>

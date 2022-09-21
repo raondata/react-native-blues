@@ -33,8 +33,7 @@ import ai.raondata.blues.state.BluetoothState;
 
 @SuppressLint("MissingPermission")
 public class RNBluesModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
-    private static final String TAG = RNBluesModule.class.getName();
-    private final ReactApplicationContext mContext;
+    private static final String TAG = "RNBluesModule";
 
     public final BluetoothAdapter mAdapter;
     private BluetoothA2dp mA2dp;
@@ -48,7 +47,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     public RNBluesModule(ReactApplicationContext context) {
         super(context);
-        this.mContext = context;
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
             @Override
@@ -65,7 +63,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 }
             }
         }, BluetoothProfile.A2DP);
-//        blues = new Blues(reactContext);
     }
 
     @Override
@@ -94,17 +91,19 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void requestBluetoothEnabled(Promise promise) {
+        sendEvent(EventType.BLUETOOTH_STATE_CHANGING, null);
         if (!isBluetoothAvailable()) {
             promise.reject(BluesException.BLUETOOTH_NOT_AVAILABLE.name(), BluesException.BLUETOOTH_NOT_AVAILABLE.message());
-        } else if (!isBluetoothEnabled()) {
+        } else if (isBluetoothEnabled()) {
             promise.reject(BluesException.ALREADY_ENABLED.name(), BluesException.ALREADY_ENABLED.message());
         } else {
             boolean enabled = mAdapter.enable();
             if (enabled) {
+                Log.d(TAG, "Bluetooth enabled");
                 sendEvent(EventType.BLUETOOTH_ENABLED, null);
                 promise.resolve(true);
             } else {
-                promise.reject(BluesException.BLUETOOTH_ENABLE_FAILED.name(), BluesException.BLUETOOTH_ENABLE_FAILED.message());
+                promise.resolve(false);
             }
         }
     }
@@ -158,7 +157,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 }
             });
 
-            mContext.registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
+            getReactApplicationContext().registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
             mAdapter.startDiscovery();
         }
     }
@@ -166,7 +165,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @ReactMethod
     public void stopScan(Promise promise) {
         if (mDiscoveryReceiver != null) {
-            mContext.unregisterReceiver(mDiscoveryReceiver);
+            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
             mDiscoveryReceiver = null;
         }
         promise.resolve(mAdapter.cancelDiscovery());
@@ -177,7 +176,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         if (!checkBluetoothAdapter()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
         } else {
-            mContext.unregisterReceiver(mDiscoveryReceiver);
+            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
             mAdapter.cancelDiscovery();
             mConnectPromise = promise;
 
@@ -235,8 +234,10 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
 
-    synchronized private void sendEvent(EventType event, @Nullable WritableMap params) {
-        mContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(event.code, params);
+    private void sendEvent(EventType event, @Nullable WritableMap params) {
+        getReactApplicationContext()
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(event.name, params);
     }
 
     @Override
@@ -261,7 +262,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                     sendEvent(EventType.BLUETOOTH_DISABLED, null);
                 }
             });
-            mContext.registerReceiver(mStateChangeReceiver, BluetoothStateChangeReceiver.intentFilter());
+            getReactApplicationContext().registerReceiver(mStateChangeReceiver, BluetoothStateChangeReceiver.intentFilter());
         }
 
         if (mConnectReceiver == null) {
@@ -286,14 +287,14 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                     }
                 }
             });
-            mContext.registerReceiver(mConnectReceiver, A2dpConnectionReceiver.intentFilter());
+            getReactApplicationContext().registerReceiver(mConnectReceiver, A2dpConnectionReceiver.intentFilter());
         }
     }
 
     @Override
     public void onHostPause() {
-        mContext.unregisterReceiver(mStateChangeReceiver);
-        mContext.unregisterReceiver(mConnectReceiver);
+        getReactApplicationContext().unregisterReceiver(mStateChangeReceiver);
+        getReactApplicationContext().unregisterReceiver(mConnectReceiver);
     }
 
     @Override

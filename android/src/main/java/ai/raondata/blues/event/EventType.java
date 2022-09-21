@@ -5,6 +5,8 @@ import com.facebook.react.bridge.WritableMap;
 
 public enum EventType {
 
+    BLUETOOTH_STATE_CHANGING("bluetoothStateChanging"),
+
     BLUETOOTH_STATE_CHANGED("bluetoothStateChanged"),
 
     BLUETOOTH_ENABLED("bluetoothEnabled"),
@@ -27,9 +29,9 @@ public enum EventType {
 
 ;
 
-    public final String code;
-    EventType(String code) {
-        this.code = code;
+    public final String name;
+    EventType(String name) {
+        this.name = name;
     }
 
     public static WritableMap eventNames() {

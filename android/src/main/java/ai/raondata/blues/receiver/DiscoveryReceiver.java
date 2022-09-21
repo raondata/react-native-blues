@@ -34,8 +34,8 @@ public class DiscoveryReceiver extends BroadcastReceiver {
                 NativeDevice found = new NativeDevice(device);
                 found.putExtra("rssi", (int) intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE));
 
-                mCallback.onDeviceDiscovered(found);
                 unpairedDevices.put(device.getAddress(), found);
+                mCallback.onDeviceDiscovered(found);
             }
         } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
             mCallback.onDiscoveryFinished(unpairedDevices.values());

@@ -3,6 +3,7 @@ import { tryCall } from "../../util";
 
 export const setEvent = (eventName, listener) => {
   console.log('[bluetooth] set event to RNBlues:', eventName);
+
   RNBlues.on(eventName, listener);
 };
 
@@ -24,9 +25,10 @@ export const isBluetoothEnabled = async () => {
 }
 
 export const enableBluetooth = async (onBluetoothAlreadyEnabled) => {
-  let enabled;
+  let enabled = true;
   try {
     enabled = await RNBlues.requestBluetoothEnabled();
+    console.log('RNBlues.requestBluetoothEnabled(): ', enabled);
   } catch (e) {
     if (e.toString().includes('already enabled')) {
       tryCall(onBluetoothAlreadyEnabled);
