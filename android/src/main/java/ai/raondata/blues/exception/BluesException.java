@@ -2,12 +2,14 @@ package ai.raondata.blues.exception;
 
 public enum BluesException {
     BLUES_ERROR("Blues is not initialized"),
+    BLUETOOTH_NOT_AVAILABLE("Bluetooth is not available for this device"),
     BLUETOOTH_NOT_ENABLED("Bluetooth mAdapter is not enabled"),
     BLUETOOTH_ENABLE_FAILED("Failed to enable Bluetooth mAdapter"),
     BLUETOOTH_IN_DISCOVERY("Bluetooth already in discovery mode"),
     BLUETOOTH_IN_ACCEPTING("Bluetooth already in accepting state"),
     BLUETOOTH_NOT_ACCEPTING("Bluetooth is not currently accepting"),
     BLUETOOTH_DEVICE_NOT_FOUND("Bluetooth device is not found"),
+    ALREADY_ENABLED("Bluetooth is already enabled"),
     ALREADY_CONNECTING("Already attempting connection to device %s"),
     ALREADY_CONNECTED("Already connected to device %s"),
     NOT_CURRENTLY_CONNECTED("Not connected to %s"),

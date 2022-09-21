@@ -9,7 +9,7 @@ export const commonStyles = StyleSheet.create({
   header: {
     flex: -1,
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },

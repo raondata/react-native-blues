@@ -74,7 +74,7 @@ RNBlues;
 ```
 * What went wrong:
 A problem occurred evaluating project ':react-native-blues'.
-> Could not find method compile() for arguments [com.facebook.react:react-native:+] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.
+> Could not find method compile() for arguments [com.facebook.react:react-native:0.20.1] on object of type org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler.
 ```
 
 #### solution
@@ -83,7 +83,7 @@ A problem occurred evaluating project ':react-native-blues'.
 ```groovy
 ...
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
+    implementation 'com.facebook.react:react-native:0.20.1'
 }
 ```
 

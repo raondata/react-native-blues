@@ -1,0 +1,17 @@
+export const Colors = {
+  primary: "#fff",
+  disabled: "#6C6C6C",
+  itemBorder: "#4B4B4B",
+  itemBorderGray: "#333333",
+  textDefault: "#E0E0E0",
+  textGray: "#A0A0A0",
+  textDark: "#6C6C6C",
+  textBlack: "#121212",
+  background: "#121212",
+  modalBackground: "#383838",
+  buttonBackgrond: "#1E1E1E",
+  popupBackground: "#12121299",
+  snackbarBackground: "#1E1E1E",
+  inactive: "#272727",
+  active: "#333333",
+};

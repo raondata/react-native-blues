@@ -1,4 +1,4 @@
-package ai.raoidata.blues.example.newarchitecture;
+package ai.raondata.blues.example.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.EmptyReactNativeConfig;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import ai.raoidata.blues.example.BuildConfig;
-import ai.raoidata.blues.example.newarchitecture.components.MainComponentsRegistry;
-import ai.raoidata.blues.example.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import ai.raondata.blues.example.BuildConfig;
+import ai.raondata.blues.example.newarchitecture.components.MainComponentsRegistry;
+import ai.raondata.blues.example.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

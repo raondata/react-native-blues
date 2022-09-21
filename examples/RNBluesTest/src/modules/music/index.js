@@ -13,6 +13,16 @@ export const init = async () => {
   }
 };
 
+export const list = () => {
+  return [
+    'asmr1.mp3',
+    'vocgan.wav',
+  ].map(filename => ({
+    id: filename.split('.')[0],
+    name: filename,
+    path: remoteUrl + filename
+  }));
+}
 
 export const play = async (name, path) => {
   const music = {

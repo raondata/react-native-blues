@@ -1,4 +1,5 @@
 import RNBlues from "react-native-blues";
+import { tryCall } from "../../util";
 
 export const setEvent = (eventName, listener) => {
   console.log('[bluetooth] set event to RNBlues:', eventName);
@@ -22,8 +23,22 @@ export const isBluetoothEnabled = async () => {
   return await RNBlues.isBluetoothEnabled();
 }
 
-export const requestBluetoothEnabled = async () => {
-  return await RNBlues.requestBluetoothEnabled();
+export const enableBluetooth = async (onBluetoothAlreadyEnabled) => {
+  let enabled;
+  try {
+    enabled = await RNBlues.requestBluetoothEnabled();
+  } catch (e) {
+    if (e.toString().includes('already enabled')) {
+      tryCall(onBluetoothAlreadyEnabled);
+    } else {
+      throw e;
+    }
+  }
+  if (!enabled) {
+    throw new Error('failed to enable bluetooth');
+  } else {
+    return true;
+  }
 }
 
 export const getPairedDeviceList = async () => {

@@ -1,33 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, LogBox, Text, ToastAndroid, TouchableHighlight, View } from 'react-native';
+import { EnabledIndicator, PopupConfirm } from '../components';
 import * as Auth from '../modules/auth';
 import * as Blues from "../modules/bluetooth";
 import * as Music from '../modules/music';
-import { remoteUrl } from "../modules/music";
-import * as Storage from '../modules/storage';
 import { commonStyles } from "../styles/commonStyles";
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 
 const SongListScreen = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [isBluetoothEnabled, setBluetoothEnabled] = useState(false);
   const [isScanning, setScanning] = useState(false);
   const [isConnected, setConnected] = useState(false);
   const [songList, setSongList] = useState([]);
   const [packetText, setPacketText] = useState(null);
 
+  const [isPopupVisible, showPopupVisible] = useState(false);
+
   useEffect(() => {
     console.log('>> useEffect()');
-    Auth.requestStoragePermission().then(async (allowed) => {
-      console.log('storage permission:', allowed);
-      if (allowed == "granted") {
-        Music.init();
-        // const musicFileList = await Storage.read(Music.storagePath);
-        const musicFileList = Storage.listRemote(remoteUrl);
-        setSongList(musicFileList);
-      }
-    });
 
-    Auth.enablePermissions().then(res => {
+    const setEvents = () => {
+      console.log('setEvents()');
+
+      Blues.setEvent("bluetoothStateChanged", async () => {
+        console.log('>> bluetoothStateChanged');
+      });
+      Blues.setEvent("bluetoothEnabled", async () => {
+        console.log('>> bluetoothEnabled');
+        ToastAndroid.show("블루투스가 활성화되었습니다.", ToastAndroid.LONG);
+      });
+      Blues.setEvent("bluetoothDisabled", async () => {
+        console.log('>> bluetoothDisabled');
+        ToastAndroid.show("블루투스가 비활성화되었습니다.", ToastAndroid.LONG);
+        setBluetoothEnabled(false);
+        showPopupVisible(true);
+      });    
       Blues.setEvent("deviceDiscovered", async (device) => {
         console.log('>> deviceDiscovered:', device);
         if (device.name === 'MH-M38') {
@@ -60,9 +68,20 @@ const SongListScreen = () => {
         console.log('>> deviceDisconnected');
         setConnected(false);
       });
-    }).catch((e) => {
-      console.error(`블루투스 권한 요청 중 오류가 발생했습니다. ${e}`);
-      ToastAndroid.show(`블루투스 권한 요청 중 오류가 발생했습니다. ${e}`, ToastAndroid.LONG);
+    };
+
+    setEvents();
+    Auth.requestPermissions().then(async (res) => {
+      setBluetoothEnabled(res);
+      if (await Blues.isBluetoothEnabled()) {
+        ToastAndroid.show("블루투스가 이미 활성화되어있습니다.", ToastAndroid.LONG);
+      } else {
+        showPopupVisible(true);
+      }
+
+      Music.init();
+      const musicFileList = Music.list();
+      setSongList(musicFileList);
     });
     
     const onUnmount = () => {
@@ -92,23 +111,28 @@ const SongListScreen = () => {
   return (
     <View style={commonStyles.container}>
       <View style={commonStyles.header}>
-        <Text style={{flex:1}}>블루투스 스피커 연결</Text>
-        {isScanning ? <ActivityIndicator /> : null}
-        <TouchableHighlight
-          disabled={isScanning}
-          style={[commonStyles.btn, isScanning ? {backgroundColor: '#ccc'} : null]}
-          underlayColor='#ddd'
-          activeOpacity={0.95}
-          onPress={()=>{
-            if (isConnected) {
-              Blues.disconnect();
-            } else {
-              startScan();
-            }
-          }}
-        >
-          <Text style={commonStyles.btnText}>{isConnected ? 'DISCONNECT' : 'CONNECT'}</Text>
-        </TouchableHighlight>
+        <View style={{flexDirection: 'row'}}>
+          <Text style={{marginRight: 10}}>블루투스 스피커 연결</Text>
+          <EnabledIndicator isEnabled={isBluetoothEnabled}  style={commonStyles.enabled} />
+        </View>
+        <View style={{flexDirection: 'row'}}>
+          {isScanning ? <ActivityIndicator /> : null}
+          <TouchableHighlight
+            disabled={isScanning}
+            style={[commonStyles.btn, isScanning ? {backgroundColor: '#ccc'} : null]}
+            underlayColor='#ddd'
+            activeOpacity={0.95}
+            onPress={()=>{
+              if (isConnected) {
+                Blues.disconnect();
+              } else {
+                startScan();
+              }
+            }}
+          >
+            <Text style={commonStyles.btnText}>{isConnected ? 'DISCONNECT' : 'CONNECT'}</Text>
+          </TouchableHighlight>
+        </View>
       </View>
       <View style={commonStyles.body}>
         <FlatList style={commonStyles.list}
@@ -150,6 +174,18 @@ const SongListScreen = () => {
           </TouchableHighlight>
         </View>
       </View>
+      <PopupConfirm
+        visible={isPopupVisible}
+        title='블루투스 활성화'
+        message='블루투스가 활성화되어있지 않습니다. 블루투스를 활성화하시겠습니까?'
+        onCancel={() => {
+          showPopupVisible(false);
+        }}
+        onConfirm={async () => {
+          showPopupVisible(false);
+          await Blues.enableBluetooth();
+        }}
+      />
     </View>
   );
 };
