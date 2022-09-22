@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, LogBox, Text, ToastAndroid, TouchableHighlight, View } from 'react-native';
+import * as Blues from "react-native-blues";
 import { EnabledIndicator, PopupConfirm, SvgIcon } from '../components';
 import * as Auth from '../modules/auth';
-import * as Blues from "../modules/bluetooth";
 import * as Music from '../modules/music';
 import { commonStyles } from "../styles/commonStyles";
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
@@ -114,7 +114,9 @@ const SongListScreen = () => {
         <View style={{flexDirection: 'row'}}>
           <Text style={{marginRight: 10}}>블루투스 스피커 연결</Text>
           <EnabledIndicator isEnabled={isBluetoothEnabled}  style={commonStyles.enabled} />
-          <SvgIcon name={isConnected ? 'link' : 'unlink'} color='#fff' />
+          <View style={{width:12, height:12}}>
+            <SvgIcon name={isConnected ? 'link' : 'unlink'} color={isConnected ? '#0f0' : '#ff0'} style={{flex:1}} />
+          </View>
         </View>
         <View style={{flexDirection: 'row'}}>
           {isScanning ? <ActivityIndicator /> : null}

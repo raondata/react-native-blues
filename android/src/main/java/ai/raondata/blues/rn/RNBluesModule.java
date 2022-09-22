@@ -240,7 +240,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         }
 
         try {
-            Method mtdRemoveBond = mDevice.getClass().getMethod("removeBond");
+            Method mtdRemoveBond = mDevice.getDevice().getClass().getMethod("removeBond");
             mtdRemoveBond.invoke(mDevice.getDevice());
         } catch (Exception e) {
             e.printStackTrace();
