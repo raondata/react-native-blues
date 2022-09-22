@@ -1,11 +1,11 @@
-import React, { memo, useState } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 const EnabledIndicator = ({
   isEnabled,
+  size = 12,
   ...props
 }) => {
-  const [enabled, setEnabled] = useState(isEnabled);
   const styles = StyleSheet.create({
     container: {
       alignItems: 'center',
@@ -13,19 +13,18 @@ const EnabledIndicator = ({
       padding: 4,
     },
     indicator: {
-      
-      width: 16,
-      height: 16,
-      borderRadius: 16,
+      width: size,
+      height: size,
+      borderRadius: size,
     },
   });
 
   return (
     <View style={styles.container}>
-      <View style={[styles.indicator, {backgroundColor: enabled ? '#0f0' : '#ff0'}]} />
+      <View style={[styles.indicator, {backgroundColor: isEnabled ? '#0f0' : '#ff0'}]} />
     </View>
   );
 };
 
 
-export default memo(EnabledIndicator);
+export default EnabledIndicator;

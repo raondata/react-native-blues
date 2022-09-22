@@ -1,0 +1,6 @@
+// .svgrrc
+{
+  "replaceAttrValues": {
+    "#000": "{props.fill}"
+  }
+}
