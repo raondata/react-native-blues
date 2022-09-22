@@ -7,8 +7,6 @@ buildscript {
 
     dependencies {
         classpath "com.android.tools.build:gradle:7.1.1"
-        // classpath "org.aspectj:aspectjtools:1.9.0"
-        // classpath "org.aspectj:aspectjweaver:1.9.0"
     }
 }
 
@@ -34,6 +32,5 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.facebook.react:react-native:0.20.1'
-    // implementation "org.aspectj:aspectjrt:1.9.0"
+    implementation 'com.facebook.react:react-native:+'
 }

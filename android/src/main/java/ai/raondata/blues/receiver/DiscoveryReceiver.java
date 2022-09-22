@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,15 +30,17 @@ public class DiscoveryReceiver extends BroadcastReceiver {
         String action = intent.getAction();
 
         if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            Log.d("DiscoveryReceiver", "onDeviceDiscovered: BluetoothDevice.ACTION_FOUND");
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             if (!unpairedDevices.containsKey(device.getAddress())) {
-                NativeDevice found = new NativeDevice(device);
-                found.putExtra("rssi", (int) intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE));
+                NativeDevice nativeDevice = new NativeDevice(device);
+                nativeDevice.putExtra("rssi", (int) intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE));
 
-                unpairedDevices.put(device.getAddress(), found);
-                mCallback.onDeviceDiscovered(found);
+                unpairedDevices.put(device.getAddress(), nativeDevice);
+                mCallback.onDeviceDiscovered(nativeDevice);
             }
         } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+            Log.d("DiscoveryReceiver", "onDiscoveryFinished: BluetoothAdapter.ACTION_DISCOVERY_FINISHED");
             mCallback.onDiscoveryFinished(unpairedDevices.values());
             context.unregisterReceiver(this);
         }

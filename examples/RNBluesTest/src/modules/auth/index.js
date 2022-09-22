@@ -5,7 +5,6 @@ const requiredPermissions = (() => {
   const permissions = [
     PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION,
     PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
-    PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION,
   ];
   if (Platform.Version >= 31) {
     permissions.concat(

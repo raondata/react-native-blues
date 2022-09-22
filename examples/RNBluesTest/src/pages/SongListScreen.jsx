@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, LogBox, Text, ToastAndroid, TouchableHighlight, View } from 'react-native';
-import { EnabledIndicator, PopupConfirm } from '../components';
+import { EnabledIndicator, PopupConfirm, SvgIcon } from '../components';
 import * as Auth from '../modules/auth';
 import * as Blues from "../modules/bluetooth";
 import * as Music from '../modules/music';
@@ -8,7 +8,6 @@ import { commonStyles } from "../styles/commonStyles";
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 
 const SongListScreen = () => {
-  const [selectedDevice, setSelectedDevice] = useState(null);
   const [isBluetoothEnabled, setBluetoothEnabled] = useState((async()=>await Blues.isBluetoothEnabled())());
   const [isScanning, setScanning] = useState(false);
   const [isConnected, setConnected] = useState(false);
@@ -38,7 +37,7 @@ const SongListScreen = () => {
         ToastAndroid.show("블루투스가 비활성화되었습니다.", ToastAndroid.LONG);
         setBluetoothEnabled(false);
         showPopupVisible(true);
-      });    
+      });
       Blues.setEvent("deviceDiscovered", async (device) => {
         console.log('>> deviceDiscovered:', device);
         if (device.name === 'MH-M38') {
@@ -105,7 +104,7 @@ const SongListScreen = () => {
       console.log('>> startScan(): conn:', conn);
     } else {
       console.log('>> startScan(): device not found in paired devices. start scanning...');
-      Blues.startScan();
+      await Blues.startScan();
     }
   };
 
@@ -115,6 +114,7 @@ const SongListScreen = () => {
         <View style={{flexDirection: 'row'}}>
           <Text style={{marginRight: 10}}>블루투스 스피커 연결</Text>
           <EnabledIndicator isEnabled={isBluetoothEnabled}  style={commonStyles.enabled} />
+          <SvgIcon name={isConnected ? 'link' : 'unlink'} color='#fff' />
         </View>
         <View style={{flexDirection: 'row'}}>
           {isScanning ? <ActivityIndicator /> : null}

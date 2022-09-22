@@ -48,6 +48,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     public RNBluesModule(ReactApplicationContext context) {
         super(context);
         mAdapter = BluetoothAdapter.getDefaultAdapter();
+        context.addLifecycleEventListener(this);
         mAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
             @Override
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
@@ -63,6 +64,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 }
             }
         }, BluetoothProfile.A2DP);
+
     }
 
     @Override
@@ -122,6 +124,48 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         }
     }
 
+
+    private void registerDiscoveryReceiver(final Promise promise) {
+        mDiscoveryReceiver = new DiscoveryReceiver(new DiscoveryReceiver.Callback() {
+            @Override
+            public void onDeviceDiscovered(NativeDevice device) {
+                Log.d(TAG, "onDeviceDiscovered(): " + device.getAddress());
+                sendEvent(EventType.DEVICE_DISCOVERED, device.map());
+            }
+
+            public void onDiscoveryFinished(Collection<NativeDevice> devices) {
+                Log.d(TAG, "onDiscoveryFinished()");
+                WritableMap result = Arguments.createMap();
+                WritableArray array = Arguments.createArray();
+                for (NativeDevice device : devices) {
+                    array.pushMap(device.map());
+                }
+                result.putArray("result", array);
+                sendEvent(EventType.SCAN_STOPPED, result);
+                promise.resolve(result);
+                mDiscoveryReceiver = null;
+            }
+
+            @Override
+            public void onDiscoveryFailed(Throwable e) {
+                Log.d(TAG, "onDiscoveryFailed()");
+                promise.reject(BluesException.DISCOVERY_FAILED.name(), BluesException.DISCOVERY_FAILED.message(e.getMessage()));
+                mDiscoveryReceiver = null;
+            }
+        });
+
+        getReactApplicationContext().registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
+    }
+
+    private void unregisterDiscoveryReceiver() {
+        try {
+            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
+        } catch (IllegalArgumentException iae) {
+            Log.w(TAG, iae.getMessage());
+        }
+    }
+
+
     @ReactMethod
     public void startScan(Promise promise) {
         if (!checkBluetoothAdapter()) {
@@ -129,35 +173,8 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         } else if (mDiscoveryReceiver != null) {
             promise.reject(BluesException.BLUETOOTH_IN_DISCOVERY.name(), BluesException.BLUETOOTH_IN_DISCOVERY.message());
         } else {
-            mDiscoveryReceiver = new DiscoveryReceiver(new DiscoveryReceiver.Callback() {
-                @Override
-                public void onDeviceDiscovered(NativeDevice device) {
-                    Log.d(TAG, "onDeviceDiscovered(): " + device.getAddress());
-                    sendEvent(EventType.SCAN_STARTED, device.map());
-                }
-
-                public void onDiscoveryFinished(Collection<NativeDevice> devices) {
-                    Log.d(TAG, "onDiscoveryFinished()");
-                    WritableMap result = Arguments.createMap();
-                    WritableArray array = Arguments.createArray();
-                    for (NativeDevice device : devices) {
-                        array.pushMap(device.map());
-                    }
-                    result.putArray("result", array);
-                    sendEvent(EventType.SCAN_STOPPED, result);
-                    promise.resolve(result);
-                    mDiscoveryReceiver = null;
-                }
-
-                @Override
-                public void onDiscoveryFailed(Throwable e) {
-                    Log.d(TAG, "onDiscoveryFailed()");
-                    promise.reject(BluesException.DISCOVERY_FAILED.name(), BluesException.DISCOVERY_FAILED.message(e.getMessage()));
-                    mDiscoveryReceiver = null;
-                }
-            });
-
-            getReactApplicationContext().registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
+            registerDiscoveryReceiver(promise);
+            sendEvent(EventType.SCAN_STARTED, null);
             mAdapter.startDiscovery();
         }
     }
@@ -176,10 +193,10 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         if (!checkBluetoothAdapter()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
         } else {
-            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
-            mAdapter.cancelDiscovery();
+            unregisterDiscoveryReceiver();
             mConnectPromise = promise;
 
+            // dhpark: Bluetooth device MAC address => get Device instance
             BluetoothDevice device = mAdapter.getRemoteDevice(id);
             if (device != null) {
                 mDevice = new NativeDevice(device);
@@ -196,10 +213,10 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 try {
                     Method connectMethod = BluetoothA2dp.class.getMethod("connect", BluetoothDevice.class);
                     connectMethod.invoke(mA2dp, device);
-                    promise.resolve(device);
+                    promise.resolve(mDevice.map());
                 } catch (Exception e) {
                     e.printStackTrace();
-                    promise.reject(BluesException.CONNECTION_FAILED.name(), BluesException.CONNECTION_FAILED.message());
+                    promise.reject(BluesException.CONNECTION_FAILED.name(), BluesException.CONNECTION_FAILED.message(device.getName()));
                 }
             } else {
                 promise.reject(BluesException.BLUETOOTH_DEVICE_NOT_FOUND.name(), BluesException.BLUETOOTH_DEVICE_NOT_FOUND.message());
@@ -216,7 +233,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     public void disconnectA2dp(Promise promise) {
         try {
             Method disconnectMethod = BluetoothA2dp.class.getMethod("disconnect", BluetoothDevice.class);
-            disconnectMethod.invoke(mA2dp, mDevice);
+            disconnectMethod.invoke(mA2dp, mDevice.getDevice());
         } catch (Exception e) {
             e.printStackTrace();
             promise.reject(BluesException.DISCONNECTION_FAILED.name(), BluesException.DISCONNECTION_FAILED.message(mDevice.getName() + ", " + mDevice.getAddress()));
@@ -224,7 +241,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
         try {
             Method mtdRemoveBond = mDevice.getClass().getMethod("removeBond");
-            mtdRemoveBond.invoke(mDevice);
+            mtdRemoveBond.invoke(mDevice.getDevice());
         } catch (Exception e) {
             e.printStackTrace();
             promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
@@ -242,6 +259,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @Override
     public void onHostResume() {
+        Log.d(TAG, "onHostResume()");
         if (mStateChangeReceiver == null) {
             mStateChangeReceiver = new BluetoothStateChangeReceiver(new BluetoothStateChangeReceiver.Callback() {
                 @Override
@@ -269,18 +287,21 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             mConnectReceiver = new A2dpConnectionReceiver(new A2dpConnectionReceiver.Callback() {
                 @Override
                 public void onDeviceConnectionChanged() {
+                    Log.d(TAG, "onDeviceConnectionChanged: A2dpConnectionReceiver");
                 }
 
                 @Override
                 public void onDeviceConnected() {
+                    Log.d(TAG, "onDeviceConnected: A2dpConnectionReceiver");
                     sendEvent(EventType.DEVICE_CONNECTED, null);
                 }
 
                 @Override
                 public void onDeviceDisconnected() {
+                    Log.d(TAG, "onDeviceDisconnected: A2dpConnectionReceiver");
                     sendEvent(EventType.DEVICE_DISCONNECTED, null);
                     if (mConnectPromise != null) {
-                        mConnectPromise.reject(BluesException.ALREADY_CONNECTING.name(), BluesException.ALREADY_CONNECTING.message());
+                        mConnectPromise.reject(BluesException.ALREADY_CONNECTING.name(), BluesException.ALREADY_CONNECTING.message(mDevice.getName()));
                         mConnectPromise = null;
                     } else {
                         sendEvent(EventType.DEVICE_DISCONNECTED, null);
@@ -293,13 +314,23 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @Override
     public void onHostPause() {
-        getReactApplicationContext().unregisterReceiver(mStateChangeReceiver);
-        getReactApplicationContext().unregisterReceiver(mConnectReceiver);
+        Log.d(TAG, "onHostPause()");
+        try {
+            getReactApplicationContext().unregisterReceiver(mStateChangeReceiver);
+        } catch (IllegalArgumentException iae) {
+            Log.d(TAG, "IllegalArgumentException: " + iae.getMessage());
+        }
+        try {
+            getReactApplicationContext().unregisterReceiver(mConnectReceiver);
+        } catch (IllegalArgumentException iae) {
+            Log.d(TAG, "IllegalArgumentException: " + iae.getMessage());
+        }
     }
 
     @Override
     public void onHostDestroy() {
+        Log.d(TAG, "onHostDestroy()");
         mAdapter.cancelDiscovery();
-        mAdapter.closeProfileProxy(BluetoothProfile.A2DP, mA2dp);
+//        mAdapter.closeProfileProxy(BluetoothProfile.A2DP, mA2dp);
     }
 }

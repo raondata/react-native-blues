@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
 import ai.raondata.blues.state.BluetoothState;
 
@@ -25,10 +26,12 @@ public class BluetoothStateChangeReceiver extends BroadcastReceiver {
 
             switch (state) {
                 case BluetoothAdapter.STATE_OFF:
+                    Log.d("BlueStateChangeReceiver", "onStateChange, onBluetoothDisabled: BluetoothAdapter.STATE_OFF");
                     mCallback.onStateChange(BluetoothState.DISABLED, BluetoothState.ENABLED);
                     mCallback.onBluetoothDisabled();
                     break;
                 case BluetoothAdapter.STATE_ON:
+                    Log.d("BlueStateChangeReceiver", "onStateChange, onBluetoothEnabled: BluetoothAdapter.STATE_ON");
                     mCallback.onStateChange(BluetoothState.ENABLED, BluetoothState.DISABLED);
                     mCallback.onBluetoothEnabled();
                     break;
