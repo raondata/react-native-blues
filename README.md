@@ -17,10 +17,10 @@
 
 ### 1. Install
 
-#### 1.1 <strike>with npm</strike> **(not available yet)**
+#### 1.1 with npm
 
 ```sh
-$ npm install react-native-blues --save
+$ npm install react-native-blues
 ```
 
 #### 1.2 without npm
