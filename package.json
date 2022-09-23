@@ -2,16 +2,27 @@
 {
   "name": "react-native-blues",
   "version": "1.0.0",
-  "description": "",
+  "description": "Blues is a package for connecting Bluetooth Speaker based on A2dp Profile in React Native application.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "bluetooth",
+    "speaker",
+    "a2dp"
   ],
-  "author": "",
-  "license": "",
+  "author": {
+    "name" : "Jake Park",
+    "email" : "glow153@gmail.com",
+    "url" : "https://github.com/raondata/Blues"
+  },
+  "homepage": "https://github.com/raondata/Blues",
+  "bugs": {
+    "email": "glow153@gmail.com"
+  },
+  "license": "MIT",
   "peerDependencies": {
     "react-native": "^0.41.2"
   }

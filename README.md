@@ -7,7 +7,9 @@
 
 1. Blues uses "A2DP" Bluetooth profile in Android.
 2. Blues supports only Android.
-3. Blues is developed refer to '[react-native-a2dp](https://www.npmjs.com/package/react-native-a2dp).'
+3. Blues is developed refer to
+	- [react-native-bluetooth-classic](https://github.com/kenjdavidson/react-native-bluetooth-classic)
+	- [react-native-a2dp](https://www.npmjs.com/package/react-native-a2dp)
 
 ---
 
@@ -68,6 +70,8 @@ import RNBlues from 'react-native-blues';
 RNBlues;
 ```
 
+for more usage, please refer to example project (`./examples/RNBluesTest`)
+
 ## Troubleshooting
 
 ### 1. build error: Could not find method compile()
@@ -94,5 +98,5 @@ dependencies {
 
 
 ## Ref
-
+- [react-native-bluetooth-classic](https://github.com/kenjdavidson/react-native-bluetooth-classic)
 - [react-native-a2dp](https://www.npmjs.com/package/react-native-a2dp)
