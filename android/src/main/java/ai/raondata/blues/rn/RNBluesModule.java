@@ -21,13 +21,14 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Timer;
 
+import ai.raondata.blues.event.EventType;
 import ai.raondata.blues.exception.BluesException;
 import ai.raondata.blues.model.NativeDevice;
 import ai.raondata.blues.receiver.A2dpConnectionReceiver;
 import ai.raondata.blues.receiver.BluetoothStateChangeReceiver;
 import ai.raondata.blues.receiver.DiscoveryReceiver;
-import ai.raondata.blues.event.EventType;
 import ai.raondata.blues.state.BluetoothState;
 
 
@@ -40,10 +41,12 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     private NativeDevice mDevice;
 
     private DiscoveryReceiver mDiscoveryReceiver;
-    private BluetoothStateChangeReceiver mStateChangeReceiver;
-    private A2dpConnectionReceiver mConnectReceiver;
+    private BluetoothStateChangeReceiver mBluetoothStateReceiver;
+    private A2dpConnectionReceiver mConnectionStateReceiver;
 
     private Promise mConnectPromise;
+
+    private Timer scanTimer;
 
     public RNBluesModule(ReactApplicationContext context) {
         super(context);
@@ -64,7 +67,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 }
             }
         }, BluetoothProfile.A2DP);
-
     }
 
     @Override
@@ -72,9 +74,141 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         return "RNBlues";
     }
 
+    private void sendRNEvent(EventType event, @Nullable WritableMap params) {
+        getReactApplicationContext()
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(event.name, params);
+    }
+
     private boolean isBluetoothAvailable() {return mAdapter != null;}
     private boolean isBluetoothEnabled() {return mAdapter.isEnabled();}
     private boolean checkBluetoothAdapter() {return isBluetoothAvailable() && isBluetoothEnabled();}
+
+    private void registerDiscoveryReceiver(final Promise promise) {
+        Log.d(TAG, "registerDiscoveryReceiver()");
+        if (mDiscoveryReceiver == null) {
+            mDiscoveryReceiver = new DiscoveryReceiver(new DiscoveryReceiver.Callback() {
+                @Override
+                public void onDeviceDiscovered(NativeDevice device) {
+                    Log.d(TAG, "onDeviceDiscovered(): " + device.getAddress());
+                    sendRNEvent(EventType.DEVICE_DISCOVERED, device.map());
+                }
+
+                public void onDiscoveryFinished(Collection<NativeDevice> devices) {
+                    Log.d(TAG, "onDiscoveryFinished()");
+                    WritableMap result = Arguments.createMap();
+                    WritableArray array = Arguments.createArray();
+                    for (NativeDevice device : devices) {
+                        array.pushMap(device.map());
+                    }
+                    result.putArray("result", array);
+                    promise.resolve(result);
+                    unregisterDiscoveryReceiver();
+                }
+
+                @Override
+                public void onDiscoveryFailed(Throwable e) {
+                    Log.d(TAG, "onDiscoveryFailed()");
+                    promise.reject(BluesException.DISCOVERY_FAILED.name(), BluesException.DISCOVERY_FAILED.message(e.getMessage()));
+                    unregisterDiscoveryReceiver();
+                }
+            });
+            getReactApplicationContext().registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
+        } else {
+            Log.w(TAG, "DiscoveryReceiver already registered.");
+        }
+    }
+
+    private void registerBluetoothStateReceiver() {
+        if (mBluetoothStateReceiver == null) {
+            mBluetoothStateReceiver = new BluetoothStateChangeReceiver(new BluetoothStateChangeReceiver.Callback() {
+                @Override
+                public void onStateChange(BluetoothState newState, BluetoothState oldState) {
+                    Log.d(TAG, "onStateChange(): bluetooth state changed");
+                    sendRNEvent(EventType.BLUETOOTH_STATE_CHANGED, null);
+                }
+
+                @Override
+                public void onBluetoothEnabled() {
+                    Log.d(TAG, "onStateChange(): bluetooth enabled");
+                    sendRNEvent(EventType.BLUETOOTH_ENABLED, null);
+                }
+
+                @Override
+                public void onBluetoothDisabled() {
+                    Log.d(TAG, "onStateChange(): bluetooth disabled");
+                    sendRNEvent(EventType.BLUETOOTH_DISABLED, null);
+                }
+            });
+            getReactApplicationContext().registerReceiver(mBluetoothStateReceiver, BluetoothStateChangeReceiver.intentFilter());
+        } else {
+            Log.w(TAG, "BluetoothStateReceiver already registered.");
+        }
+    }
+
+    private void registerConnectionStateReceiver() {
+        if (mConnectionStateReceiver == null) {
+            mConnectionStateReceiver = new A2dpConnectionReceiver(new A2dpConnectionReceiver.Callback() {
+                @Override
+                public void onDeviceConnectionChanged() {
+                    Log.d(TAG, "onDeviceConnectionChanged: A2dpConnectionReceiver");
+                    sendRNEvent(EventType.CONNECTION_STATE_CHANGED, null);
+                }
+
+                @Override
+                public void onDeviceConnected() {
+                    Log.d(TAG, "onDeviceConnected: A2dpConnectionReceiver");
+                    sendRNEvent(EventType.DEVICE_CONNECTED, null);
+                    unregisterDiscoveryReceiver();
+                }
+
+                @Override
+                public void onDeviceDisconnected() {
+                    Log.d(TAG, "onDeviceDisconnected: A2dpConnectionReceiver");
+                    sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
+                    if (mConnectPromise != null) {
+                        mConnectPromise.reject(BluesException.ALREADY_CONNECTING.name(), BluesException.ALREADY_CONNECTING.message(mDevice.getName()));
+                        mConnectPromise = null;
+                    } else {
+                        sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
+                    }
+                }
+            });
+            getReactApplicationContext().registerReceiver(mConnectionStateReceiver, A2dpConnectionReceiver.intentFilter());
+        } else {
+            Log.w(TAG, "ConnectionStateReceiver already registered.");
+        }
+    }
+
+    private void unregisterDiscoveryReceiver() {
+        Log.d(TAG, "unregisterDiscoveryReceiver()");
+        try {
+            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
+            mDiscoveryReceiver = null;
+        } catch (IllegalArgumentException iae) {
+            Log.w(TAG, iae.getMessage());
+        }
+    }
+
+    private void unregisterBluetoothStateReceiver() {
+        try {
+            getReactApplicationContext().unregisterReceiver(mBluetoothStateReceiver);
+            mBluetoothStateReceiver = null;
+        } catch (IllegalArgumentException iae) {
+            Log.d(TAG, "IllegalArgumentException: " + iae.getMessage());
+        }
+    }
+
+    private void unregisterConnectionStateReceiver() {
+        try {
+            getReactApplicationContext().unregisterReceiver(mConnectionStateReceiver);
+            mConnectionStateReceiver = null;
+        } catch (IllegalArgumentException iae) {
+            Log.d(TAG, "IllegalArgumentException: " + iae.getMessage());
+        }
+    }
+
+    /* ============================= React methods ============================= */
 
     @ReactMethod
     public void isBluetoothAvailable(Promise promise) {
@@ -93,7 +227,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void requestBluetoothEnabled(Promise promise) {
-        sendEvent(EventType.BLUETOOTH_STATE_CHANGING, null);
+        sendRNEvent(EventType.BLUETOOTH_STATE_CHANGING, null);
         if (!isBluetoothAvailable()) {
             promise.reject(BluesException.BLUETOOTH_NOT_AVAILABLE.name(), BluesException.BLUETOOTH_NOT_AVAILABLE.message());
         } else if (isBluetoothEnabled()) {
@@ -102,7 +236,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             boolean enabled = mAdapter.enable();
             if (enabled) {
                 Log.d(TAG, "Bluetooth enabled");
-                sendEvent(EventType.BLUETOOTH_ENABLED, null);
+                sendRNEvent(EventType.BLUETOOTH_ENABLED, null);
                 promise.resolve(true);
             } else {
                 promise.resolve(false);
@@ -124,48 +258,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         }
     }
 
-
-    private void registerDiscoveryReceiver(final Promise promise) {
-        mDiscoveryReceiver = new DiscoveryReceiver(new DiscoveryReceiver.Callback() {
-            @Override
-            public void onDeviceDiscovered(NativeDevice device) {
-                Log.d(TAG, "onDeviceDiscovered(): " + device.getAddress());
-                sendEvent(EventType.DEVICE_DISCOVERED, device.map());
-            }
-
-            public void onDiscoveryFinished(Collection<NativeDevice> devices) {
-                Log.d(TAG, "onDiscoveryFinished()");
-                WritableMap result = Arguments.createMap();
-                WritableArray array = Arguments.createArray();
-                for (NativeDevice device : devices) {
-                    array.pushMap(device.map());
-                }
-                result.putArray("result", array);
-                sendEvent(EventType.SCAN_STOPPED, result);
-                promise.resolve(result);
-                mDiscoveryReceiver = null;
-            }
-
-            @Override
-            public void onDiscoveryFailed(Throwable e) {
-                Log.d(TAG, "onDiscoveryFailed()");
-                promise.reject(BluesException.DISCOVERY_FAILED.name(), BluesException.DISCOVERY_FAILED.message(e.getMessage()));
-                mDiscoveryReceiver = null;
-            }
-        });
-
-        getReactApplicationContext().registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
-    }
-
-    private void unregisterDiscoveryReceiver() {
-        try {
-            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
-        } catch (IllegalArgumentException iae) {
-            Log.w(TAG, iae.getMessage());
-        }
-    }
-
-
     @ReactMethod
     public void startScan(Promise promise) {
         if (!checkBluetoothAdapter()) {
@@ -174,22 +266,21 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             promise.reject(BluesException.BLUETOOTH_IN_DISCOVERY.name(), BluesException.BLUETOOTH_IN_DISCOVERY.message());
         } else {
             registerDiscoveryReceiver(promise);
-            sendEvent(EventType.SCAN_STARTED, null);
             mAdapter.startDiscovery();
+            sendRNEvent(EventType.SCAN_STARTED, null);
         }
     }
 
     @ReactMethod
     public void stopScan(Promise promise) {
-        if (mDiscoveryReceiver != null) {
-            getReactApplicationContext().unregisterReceiver(mDiscoveryReceiver);
-            mDiscoveryReceiver = null;
-        }
-        promise.resolve(mAdapter.cancelDiscovery());
+        Log.d(TAG, ">>>>>> RNBluesModule.stopScan()");
+        boolean cancelled = mAdapter.cancelDiscovery();
+        sendRNEvent(EventType.SCAN_STOPPED, null);
+        promise.resolve(cancelled);
     }
 
     @ReactMethod
-    public void connectA2dp(String id, Promise promise) {
+    public void connectA2dp(String address, Promise promise) {
         if (!checkBluetoothAdapter()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
         } else {
@@ -197,7 +288,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             mConnectPromise = promise;
 
             // dhpark: Bluetooth device MAC address => get Device instance
-            BluetoothDevice device = mAdapter.getRemoteDevice(id);
+            BluetoothDevice device = mAdapter.getRemoteDevice(address);
             if (device != null) {
                 mDevice = new NativeDevice(device);
 
@@ -246,91 +337,42 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             e.printStackTrace();
             promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
         }
-        sendEvent(EventType.DEVICE_DISCONNECTED, null);
+        sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
         promise.resolve(true);
     }
 
+    /* ============================= React methods ============================= */
 
-    private void sendEvent(EventType event, @Nullable WritableMap params) {
-        getReactApplicationContext()
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit(event.name, params);
+
+
+    /* ============================= Lifecycle Events ============================= */
+
+    @Override
+    public void initialize() {
+        super.initialize();
+        registerBluetoothStateReceiver();
+        registerConnectionStateReceiver();
     }
 
     @Override
     public void onHostResume() {
-        Log.d(TAG, "onHostResume()");
-        if (mStateChangeReceiver == null) {
-            mStateChangeReceiver = new BluetoothStateChangeReceiver(new BluetoothStateChangeReceiver.Callback() {
-                @Override
-                public void onStateChange(BluetoothState newState, BluetoothState oldState) {
-                    Log.d(TAG, "onStateChange(): bluetooth state changed");
-                    sendEvent(EventType.BLUETOOTH_STATE_CHANGED, null);
-                }
-
-                @Override
-                public void onBluetoothEnabled() {
-                    Log.d(TAG, "onStateChange(): bluetooth enabled");
-                    sendEvent(EventType.BLUETOOTH_ENABLED, null);
-                }
-
-                @Override
-                public void onBluetoothDisabled() {
-                    Log.d(TAG, "onStateChange(): bluetooth disabled");
-                    sendEvent(EventType.BLUETOOTH_DISABLED, null);
-                }
-            });
-            getReactApplicationContext().registerReceiver(mStateChangeReceiver, BluetoothStateChangeReceiver.intentFilter());
-        }
-
-        if (mConnectReceiver == null) {
-            mConnectReceiver = new A2dpConnectionReceiver(new A2dpConnectionReceiver.Callback() {
-                @Override
-                public void onDeviceConnectionChanged() {
-                    Log.d(TAG, "onDeviceConnectionChanged: A2dpConnectionReceiver");
-                }
-
-                @Override
-                public void onDeviceConnected() {
-                    Log.d(TAG, "onDeviceConnected: A2dpConnectionReceiver");
-                    sendEvent(EventType.DEVICE_CONNECTED, null);
-                }
-
-                @Override
-                public void onDeviceDisconnected() {
-                    Log.d(TAG, "onDeviceDisconnected: A2dpConnectionReceiver");
-                    sendEvent(EventType.DEVICE_DISCONNECTED, null);
-                    if (mConnectPromise != null) {
-                        mConnectPromise.reject(BluesException.ALREADY_CONNECTING.name(), BluesException.ALREADY_CONNECTING.message(mDevice.getName()));
-                        mConnectPromise = null;
-                    } else {
-                        sendEvent(EventType.DEVICE_DISCONNECTED, null);
-                    }
-                }
-            });
-            getReactApplicationContext().registerReceiver(mConnectReceiver, A2dpConnectionReceiver.intentFilter());
-        }
+        Log.d(TAG, "************LifecycleEventListener************ : onHostResume()");
+//        registerBluetoothStateReceiver();
+//        registerConnectionStateReceiver();
     }
 
     @Override
     public void onHostPause() {
-        Log.d(TAG, "onHostPause()");
-        try {
-            getReactApplicationContext().unregisterReceiver(mStateChangeReceiver);
-        } catch (IllegalArgumentException iae) {
-            Log.d(TAG, "IllegalArgumentException: " + iae.getMessage());
-        }
-        try {
-            getReactApplicationContext().unregisterReceiver(mConnectReceiver);
-        } catch (IllegalArgumentException iae) {
-            Log.d(TAG, "IllegalArgumentException: " + iae.getMessage());
-        }
+        Log.d(TAG, "************LifecycleEventListener************ : onHostPause()");
+//        unregisterBluetoothStateReceiver();
+//        unregisterConnectionStateReceiver();
     }
 
     @Override
     public void onHostDestroy() {
-        Log.d(TAG, "onHostDestroy()");
+        Log.d(TAG, "************LifecycleEventListener************ : onHostDestroy()");
+        unregisterBluetoothStateReceiver();
+        unregisterConnectionStateReceiver();
         mAdapter.cancelDiscovery();
-//        mAdapter.closeProfileProxy(BluetoothProfile.A2DP, mA2dp);
     }
 }

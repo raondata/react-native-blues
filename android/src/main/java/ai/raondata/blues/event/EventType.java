@@ -13,6 +13,8 @@ public enum EventType {
 
     BLUETOOTH_DISABLED("bluetoothDisabled"),
 
+    CONNECTION_STATE_CHANGED("connectionStateChanged"),
+
     DEVICE_CONNECTED("deviceConnected"),
 
     DEVICE_DISCONNECTED("deviceDisconnected"),

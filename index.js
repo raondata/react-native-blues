@@ -48,7 +48,7 @@ export const enableBluetooth = async (onBluetoothAlreadyEnabled) => {
     console.log('RNBlues.requestBluetoothEnabled(): ', enabled);
   } catch (e) {
     if (e.toString().includes('already enabled')) {
-      tryCall(onBluetoothAlreadyEnabled);
+      onBluetoothAlreadyEnabled instanceof Function && onBluetoothAlreadyEnabled();
     } else {
       throw e;
     }

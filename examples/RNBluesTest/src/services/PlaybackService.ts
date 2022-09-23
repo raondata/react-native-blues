@@ -8,29 +8,17 @@ const addEvent = (evt, handler) => {
   playbackServiceEvents[evt] = TrackPlayer.addEventListener(evt, handler);
 };
 
+const registerEvents = (map) => {
+  Object.entries(map).forEach(([evt, handler]) => addEvent(evt, handler));
+};
+
 export async function PlaybackService() {
-  addEvent(Event.RemotePause, () => {
-    TrackPlayer.pause();
-  });
-  TrackPlayer.addEventListener(Event.RemotePause, () => {
-    TrackPlayer.pause();
-  });
-
-  TrackPlayer.addEventListener(Event.RemotePlay, () => {
-    TrackPlayer.play();
-  });
-
-  TrackPlayer.addEventListener(Event.RemoteNext, () => {
-    TrackPlayer.skipToNext();
-  });
-
-  TrackPlayer.addEventListener(Event.RemotePrevious, () => {
-    TrackPlayer.skipToPrevious();
-  });
-
-  TrackPlayer.addEventListener(
-    Event.RemoteDuck,
-    async ({permanent, paused}) => {
+  registerEvents({
+    [Event.RemotePause]: () => { TrackPlayer.pause(); },
+    [Event.RemotePlay]: () => { TrackPlayer.play(); },
+    [Event.RemoteNext]: () => { TrackPlayer.skipToNext(); },
+    [Event.RemotePrevious]: () => { TrackPlayer.skipToPrevious(); },
+    [Event.RemoteDuck]: async ({permanent, paused}) => {
       if (permanent) {
         TrackPlayer.pause();
         return;
@@ -46,21 +34,9 @@ export async function PlaybackService() {
         }
       }
     },
-  );
-
-  TrackPlayer.addEventListener(Event.PlaybackQueueEnded, event => {
-    console.log('Event.PlaybackQueueEnded', event);
+    [Event.PlaybackQueueEnded]: (event) => { console.log('Event.PlaybackQueueEnded', event); },
+    [Event.PlaybackTrackChanged]: (event) => { console.log('Event.PlaybackTrackChanged', event); },
+    [Event.PlaybackProgressUpdated]: (event) => { console.log('Event.PlaybackProgressUpdated', event); },
+    [Event.RemoteSeek]: (event) => { console.log('Event.RemoteSeek', event); },
   });
-
-  TrackPlayer.addEventListener(Event.PlaybackTrackChanged, event => {
-    console.log('Event.PlaybackTrackChanged', event);
-  });
-
-  TrackPlayer.addEventListener(Event.PlaybackProgressUpdated, event => {
-    console.log('Event.PlaybackProgressUpdated', event);
-  });
-
-  TrackPlayer.addEventListener(Event.RemoteSeek, event =>
-    console.log('Event.RemoteSeek', event),
-  );
 }

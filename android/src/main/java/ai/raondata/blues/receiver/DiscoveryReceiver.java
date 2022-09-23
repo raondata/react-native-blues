@@ -18,6 +18,11 @@ import ai.raondata.blues.model.NativeDevice;
 public class DiscoveryReceiver extends BroadcastReceiver {
 
     private final Callback mCallback;
+
+    public Map<String, NativeDevice> getUnpairedDevices() {
+        return unpairedDevices;
+    }
+
     private final Map<String, NativeDevice> unpairedDevices;
 
     public DiscoveryReceiver(Callback callback) {
@@ -42,7 +47,6 @@ public class DiscoveryReceiver extends BroadcastReceiver {
         } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
             Log.d("DiscoveryReceiver", "onDiscoveryFinished: BluetoothAdapter.ACTION_DISCOVERY_FINISHED");
             mCallback.onDiscoveryFinished(unpairedDevices.values());
-            context.unregisterReceiver(this);
         }
     }
 

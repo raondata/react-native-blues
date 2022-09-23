@@ -3,10 +3,7 @@ package ai.raondata.blues.model;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
-import android.os.Build;
 import android.os.ParcelUuid;
-
-import androidx.annotation.RequiresApi;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;

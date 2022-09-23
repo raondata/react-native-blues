@@ -19,6 +19,7 @@ const SongListScreen = () => {
   useEffect(() => {
     console.log('>> useEffect()');
 
+    setBluetoothEnabled((async()=>await Blues.isBluetoothEnabled())());
     const setEvents = () => {
       console.log('setEvents()');
 
@@ -29,12 +30,12 @@ const SongListScreen = () => {
         console.log('>> bluetoothStateChanged');
       });
       Blues.setEvent("bluetoothEnabled", () => {
-        ToastAndroid.show("블루투스가 활성화되었습니다.", ToastAndroid.LONG);
+        ToastAndroid.show("블루투스가 활성화되었습니다.", ToastAndroid.SHORT);
         setBluetoothEnabled(true);
       });
       Blues.setEvent("bluetoothDisabled", () => {
         console.log('>> bluetoothDisabled');
-        ToastAndroid.show("블루투스가 비활성화되었습니다.", ToastAndroid.LONG);
+        ToastAndroid.show("블루투스가 비활성화되었습니다.", ToastAndroid.SHORT);
         setBluetoothEnabled(false);
         showPopupVisible(true);
       });
@@ -96,11 +97,12 @@ const SongListScreen = () => {
     setScanning(true);
     const pairedDevices = await Blues.getPairedDeviceList();
     console.log('>> startScan(): devices=', pairedDevices);
-    let foundDevice = pairedDevices?.find(d => d.name === 'MH-M38');
-    if (foundDevice) {
+    let foundPairedDevice = pairedDevices?.find(d => d.name === 'MH-M38');
+    if (foundPairedDevice) {
+      await Blues.stopScan();
       setScanning(false);
-      console.log('>> startScan(): speaker found. start connecting...', foundDevice);
-      const conn = await Blues.connect(foundDevice.id);
+      console.log(`>> startScan(): speaker ${foundPairedDevice.id}, ${foundPairedDevice.name} found. start connecting...`);
+      const conn = await Blues.connect(foundPairedDevice.id);
       console.log('>> startScan(): conn:', conn);
     } else {
       console.log('>> startScan(): device not found in paired devices. start scanning...');

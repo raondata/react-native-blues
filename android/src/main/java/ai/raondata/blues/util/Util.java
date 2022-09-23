@@ -1,37 +1,17 @@
 package ai.raondata.blues.util;
 
-import android.bluetooth.BluetoothDevice;
-
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableMapKeySetIterator;
-import com.facebook.react.bridge.WritableMap;
+import android.util.Log;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Util {
-    public static WritableMap deviceToWritableMap(BluetoothDevice device) {
-        WritableMap params = Arguments.createMap();
-
-        if (device != null) {
-            params.putString("name", device.getName());
-            params.putString("id", device.getAddress());
-
-            if (device.getBluetoothClass() != null) {
-                params.putInt("class", device.getBluetoothClass().getDeviceClass());
-            }
-        }
-
-        return params;
-    }
-
+    private static Timer _timerHolder;
 
     public static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -47,4 +27,28 @@ public class Util {
         return dateFormat().parse(date);
     }
 
+    public static void setTimer(Runnable task, long duration) {
+        if (_timerHolder != null) {
+            Log.w("Util.setTimer", "a timer already running");
+            return;
+        }
+        Timer timer = new Timer(true);
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                task.run();
+            }
+        };
+        timer.schedule(timerTask, 0, duration);
+        _timerHolder = timer;
+    }
+
+    public static void clearTimer() {
+        if (_timerHolder != null) {
+            _timerHolder.cancel();
+            _timerHolder = null;
+        } else {
+            Log.w("Util.clearTimer", "a timer already running");
+        }
+    }
 }
