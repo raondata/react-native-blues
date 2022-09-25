@@ -64,6 +64,10 @@ export const enableBluetooth = async (onBluetoothAlreadyEnabled) => {
   }
 }
 
+export const disableBluetooth = async () => {
+  return await RNBlues.disableBluetooth();
+}
+
 export const getPairedDeviceList = async () => {
   return await RNBlues.deviceList();
 };

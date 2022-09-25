@@ -247,6 +247,15 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
+    public void disableBluetooth(Promise promise) {
+        if (!isBluetoothAvailable()) {
+            promise.reject(BluesException.BLUETOOTH_NOT_AVAILABLE.name(), BluesException.BLUETOOTH_NOT_AVAILABLE.message());
+        } else {
+            promise.resolve(mAdapter.disable());
+        }
+    }
+
+    @ReactMethod
     public void deviceList(Promise promise) {
         if (!checkBluetoothAdapter()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
