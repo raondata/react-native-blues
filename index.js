@@ -15,6 +15,10 @@ export const removeBluesEvent = (eventName: String) => {
   }
 };
 
+export const getEventHandler = (eventName) => {
+  return eventMap[eventName];
+};
+
 export const setEvent = (eventName: String, handler: Function) => {
   if (Object.keys(eventMap).includes(eventName)) {
     console.log(`[RNBlues.on] event ${eventName} already registered.`);
