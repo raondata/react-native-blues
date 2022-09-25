@@ -125,7 +125,9 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 @Override
                 public void onStateChange(BluetoothState newState, BluetoothState oldState) {
                     Log.d(TAG, "onStateChange(): bluetooth state changed");
-                    sendRNEvent(EventType.BLUETOOTH_STATE_CHANGED, null);
+                    WritableMap map = Arguments.createMap();
+                    map.putInt("state", newState.code);
+                    sendRNEvent(EventType.BLUETOOTH_STATE_CHANGED, map);
                 }
 
                 @Override
