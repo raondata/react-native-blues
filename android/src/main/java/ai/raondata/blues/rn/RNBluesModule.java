@@ -10,6 +10,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -84,13 +85,14 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     private boolean isBluetoothEnabled() {return mAdapter.isEnabled();}
     private boolean checkBluetoothAdapter() {return isBluetoothAvailable() && isBluetoothEnabled();}
 
-    private void registerDiscoveryReceiver(final Promise promise) {
+    private void registerDiscoveryReceiver(Callback onScan, final Promise promise) {
         Log.d(TAG, "registerDiscoveryReceiver()");
         if (mDiscoveryReceiver == null) {
             mDiscoveryReceiver = new DiscoveryReceiver(new DiscoveryReceiver.Callback() {
                 @Override
                 public void onDeviceDiscovered(NativeDevice device) {
                     Log.d(TAG, "onDeviceDiscovered(): " + device.getAddress());
+                    onScan.invoke(device);
                     sendRNEvent(EventType.DEVICE_DISCOVERED, device.map());
                 }
 
@@ -270,13 +272,13 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void startScan(Promise promise) {
+    public void startScan(Callback cb, Promise promise) {
         if (!checkBluetoothAdapter()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
         } else if (mDiscoveryReceiver != null) {
             promise.reject(BluesException.BLUETOOTH_IN_DISCOVERY.name(), BluesException.BLUETOOTH_IN_DISCOVERY.message());
         } else {
-            registerDiscoveryReceiver(promise);
+            registerDiscoveryReceiver(cb, promise);
             mAdapter.startDiscovery();
             sendRNEvent(EventType.SCAN_STARTED, null);
         }
