@@ -330,7 +330,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void getConnectedA2dpDevice(Promise promise) {
-        promise.resolve(mDevice.map());
+        promise.resolve(mDevice != null ? mDevice.map() : null);
     }
 
     @ReactMethod

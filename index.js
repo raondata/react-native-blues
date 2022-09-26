@@ -4,12 +4,29 @@ LogBox.ignoreLogs(['new NativeEventEmitter']);
 
 const eventEmitter = new NativeEventEmitter(RNBlues);
 const eventMap = {};
+var debugMode = false;
+
+const log = {
+  d (...s) {
+    debugMode && console.log('[BLUES]', ...s);
+  },
+  w (...s) {
+    debugMode && console.warn('[BLUES]', ...s);
+  },
+  e (...s) {
+    console.error('[BLUES]', ...s);
+  },
+}
+
+export const setDebugMode = (d) => {
+  debugMode = d;
+}
 
 export const removeBluesEvent = (eventName: String) => {
   if (Object.keys(eventMap).includes(eventName)) {
     eventMap[eventName].remove();
     delete eventMap[eventName];
-    console.log(`[RNBlues.removeBluesEvent] event ${eventName} is removed.`);
+    log.d(`removeBluesEvent: event ${eventName} is removed.`);
   } else {
     throw new Error(`${eventName} 이벤트는 react-native-blues에 등록되지 않았습니다.`);
   }
@@ -21,11 +38,11 @@ export const getEventHandler = (eventName) => {
 
 export const setEvent = (eventName: String, handler: Function) => {
   if (Object.keys(eventMap).includes(eventName)) {
-    console.log(`[RNBlues.on] event ${eventName} already registered.`);
+    log.d(`setEvent: event ${eventName} already registered.`);
     removeBluesEvent(eventName);
   }
   eventMap[eventName] = eventEmitter.addListener(eventName, handler);
-  // console.log('registered events:', Object.keys(eventMap));
+  // log.d('registered events:', Object.keys(eventMap));
   return eventMap[eventName];
 };
 
@@ -40,16 +57,20 @@ export const isBluetoothAvailable = async () => {
   return await RNBlues.isBluetoothAvailable();
 }
 
-
 export const isBluetoothEnabled = async () => {
   return await RNBlues.isBluetoothEnabled();
 }
+
+export const checkBluetoothAdapter = async () => {
+  return await RNBlues.checkBluetoothAdapter();
+}
+
 
 export const enableBluetooth = async (onBluetoothAlreadyEnabled) => {
   let enabled = true;
   try {
     enabled = await RNBlues.requestBluetoothEnabled();
-    console.log('RNBlues.requestBluetoothEnabled(): ', enabled);
+    log.d('requestBluetoothEnabled(): ', enabled);
   } catch (e) {
     if (e.toString().includes('already enabled')) {
       onBluetoothAlreadyEnabled instanceof Function && onBluetoothAlreadyEnabled();
