@@ -46,6 +46,9 @@ export const setEvent = (eventName: String, handler: Function) => {
   return eventMap[eventName];
 };
 
+export const setEvents = (events) => {
+  Object.entries(events).forEach(([k, v]) => setEvent(k, v));
+}
 
 export const removeAllEvents = () => {
   Object.keys(eventMap).forEach((eventName) => {
