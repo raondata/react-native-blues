@@ -21,6 +21,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
 import java.util.Timer;
 
 import ai.raondata.blues.event.EventType;
@@ -358,6 +359,16 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @ReactMethod
     public void disconnectA2dp(@Nullable Boolean removeBond, Promise promise) {
         boolean _removeBond = removeBond != null && removeBond;
+        if (mDevice != null) {
+            List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
+            if (devices.size() > 0) {
+                mDevice = new NativeDevice(devices.get(0));
+            } else {
+                mDevice = null;
+                promise.reject(BluesException.NO_DEVICE_CONNECTION.name(), BluesException.NO_DEVICE_CONNECTION.message());
+                return;
+            }
+        }
         try {
             Method disconnectMethod = BluetoothA2dp.class.getMethod("disconnect", BluetoothDevice.class);
             disconnectMethod.invoke(mA2dp, mDevice.getDevice());

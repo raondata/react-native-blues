@@ -1,7 +1,7 @@
 
 {
   "name": "react-native-blues",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Blues is a package for connecting Bluetooth Speaker based on A2dp Profile in React Native application.",
   "main": "index.js",
   "scripts": {
