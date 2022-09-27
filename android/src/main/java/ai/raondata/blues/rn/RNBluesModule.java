@@ -359,7 +359,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @ReactMethod
     public void disconnectA2dp(@Nullable Boolean removeBond, Promise promise) {
         boolean _removeBond = removeBond != null && removeBond;
-        if (mDevice != null) {
+        if (mDevice == null) {
             List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
             if (devices.size() > 0) {
                 mDevice = new NativeDevice(devices.get(0));
