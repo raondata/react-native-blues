@@ -118,8 +118,8 @@ export const connect = async (deviceId) => {
   return await RNBlues.connectA2dp(deviceId);
 };
 
-export const disconnect = async () => {
-  await RNBlues.disconnectA2dp();
+export const disconnect = async (removeBond: Boolean) => {
+  await RNBlues.disconnectA2dp(removeBond);
 };
 
 export const close = () => {
