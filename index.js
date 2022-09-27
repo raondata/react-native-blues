@@ -106,7 +106,8 @@ export const isConnected = async () => {
 };
 
 export const startScan = async (onScan: Function) => {
-  return await RNBlues.startScan(onScan);
+  await stopScan();
+  return RNBlues.startScan(onScan);
 };
 
 export const stopScan = async () => {

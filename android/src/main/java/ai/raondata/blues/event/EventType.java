@@ -27,7 +27,9 @@ public enum EventType {
 
     SCAN_STARTED("scanStarted"),
 
-    SCAN_STOPPED("scanStopped")
+    SCAN_STOPPED("scanStopped"),
+
+    SCAN_ERROR("scanError")
 
 ;
 

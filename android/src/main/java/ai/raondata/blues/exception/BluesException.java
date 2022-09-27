@@ -1,5 +1,8 @@
 package ai.raondata.blues.exception;
 
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.WritableMap;
+
 public enum BluesException {
     BLUES_ERROR("Blues is not initialized"),
     BLUETOOTH_NOT_AVAILABLE("Bluetooth is not available for this device"),
@@ -33,8 +36,18 @@ public enum BluesException {
         this.message = message;
     }
 
-    public String message(Object... args) {
-        return String.format(message, args);
+    public String message() {
+        return message;
+    }
+    public String message(String args) {
+        return String.join(message, args);
+    }
+    
+    public WritableMap map() {
+        WritableMap map = Arguments.createMap();
+        map.putString("name", this.name());
+        map.putString("message", this.message());
+        return map;
     }
 }
 

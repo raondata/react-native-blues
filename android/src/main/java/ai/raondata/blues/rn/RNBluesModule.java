@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothProfile;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -85,14 +84,14 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     private boolean isBluetoothEnabled() {return mAdapter.isEnabled();}
     private boolean checkBluetoothAdapter() {return isBluetoothAvailable() && isBluetoothEnabled();}
 
-    private void registerDiscoveryReceiver(Callback onScan, final Promise promise) {
+    private void registerDiscoveryReceiver(final Promise promise) {
         Log.d(TAG, "registerDiscoveryReceiver()");
         if (mDiscoveryReceiver == null) {
             mDiscoveryReceiver = new DiscoveryReceiver(new DiscoveryReceiver.Callback() {
                 @Override
                 public void onDeviceDiscovered(NativeDevice device) {
                     Log.d(TAG, "onDeviceDiscovered(): " + device.getAddress());
-                    onScan.invoke(device);
+//                    onScan.invoke(device.map());
                     sendRNEvent(EventType.DEVICE_DISCOVERED, device.map());
                 }
 
@@ -105,6 +104,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                     }
                     result.putArray("result", array);
                     promise.resolve(result);
+                    sendRNEvent(EventType.SCAN_STOPPED, result);
                     unregisterDiscoveryReceiver();
                 }
 
@@ -112,6 +112,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 public void onDiscoveryFailed(Throwable e) {
                     Log.d(TAG, "onDiscoveryFailed()");
                     promise.reject(BluesException.DISCOVERY_FAILED.name(), BluesException.DISCOVERY_FAILED.message(e.getMessage()));
+                    sendRNEvent(EventType.ERROR, BluesException.DISCOVERY_FAILED.map());
                     unregisterDiscoveryReceiver();
                 }
             });
@@ -272,24 +273,36 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void startScan(Callback cb, Promise promise) {
+    public void startScan(Promise promise) {
+        // dhpark: FATAL ISSUES
+        // 1. promise와 callback으로 처리하려 했는데 Java Native 단에서 RuntimeException 발생
+        // => react native method의 경우 Promise와 callback 둘다 사용할 수 없음
+        // 2. DiscoveryReceiver 에서 BluetoothDevice.ACTION_FOUND intent를 받을 때마다 callback을 호출하려
+        //    했는데 오류 발생
+        // => react native callback은 1회 호출만 가능
+
+        Log.d(TAG, "::::: startScan :::::");
         if (!checkBluetoothAdapter()) {
+            Log.e(TAG, "bluetooth adapter not available");
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
+//            return false;
         } else if (mDiscoveryReceiver != null) {
+            Log.e(TAG, "bluetooth is scanning");
             promise.reject(BluesException.BLUETOOTH_IN_DISCOVERY.name(), BluesException.BLUETOOTH_IN_DISCOVERY.message());
+//            return false;
         } else {
-            registerDiscoveryReceiver(cb, promise);
+            registerDiscoveryReceiver(promise);
             mAdapter.startDiscovery();
             sendRNEvent(EventType.SCAN_STARTED, null);
+//            return true;
         }
     }
 
     @ReactMethod
-    public void stopScan(Promise promise) {
+    public void stopScan() {
         Log.d(TAG, ">>>>>> RNBluesModule.stopScan()");
-        boolean cancelled = mAdapter.cancelDiscovery();
+        mAdapter.cancelDiscovery();
         sendRNEvent(EventType.SCAN_STOPPED, null);
-        promise.resolve(cancelled);
     }
 
     @ReactMethod
