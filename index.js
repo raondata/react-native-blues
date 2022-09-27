@@ -105,9 +105,9 @@ export const isConnected = async () => {
   return device !== null && device !== undefined;
 };
 
-export const startScan = async (onScan: Function) => {
+export const startScan = async () => {
   await stopScan();
-  return RNBlues.startScan(onScan);
+  return RNBlues.startScan();
 };
 
 export const stopScan = async () => {

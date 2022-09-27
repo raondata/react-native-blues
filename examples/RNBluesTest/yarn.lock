@@ -6031,8 +6031,10 @@
   "resolved" "https://registry.npmjs.org/react-is/-/react-is-18.2.0.tgz"
   "version" "18.2.0"
 
-"react-native-blues@1.0.0":
-  "version" "1.0.0"
+"react-native-blues@^0.1.8":
+  "integrity" "sha512-DRkHn8QXUDjVDc9D38UMmYGZTUFhDevnsxGPeblRP/rWSIZ9qXQZnfqcwCBGk0Kq/3Iqrd/rzA3fO41nc2fl+A=="
+  "resolved" "https://registry.npmjs.org/react-native-blues/-/react-native-blues-0.1.8.tgz"
+  "version" "0.1.8"
 
 "react-native-codegen@^0.0.17":
   "integrity" "sha512-7GIEUmAemH9uWwB6iYXNNsPoPgH06pxzGRmdBzK98TgFBdYJZ7CBuZFPMe4jmHQTPOkQazKZ/w5O6/71JBixmw=="

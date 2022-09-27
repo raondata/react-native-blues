@@ -7,6 +7,15 @@ import * as Music from '../modules/music';
 import { commonStyles } from "../styles/commonStyles";
 LogBox.ignoreLogs(['new NativeEventEmitter']); // Ignore log notification by message
 
+
+// you can set your own bluetooth speaker device name below.
+const SPEAKER_DEVICE_NAME = 'MH-M38';
+
+// or you can create your own predicate function for discriminate your own bluetooth speaker.
+const predicate = (device) => device.name === SPEAKER_DEVICE_NAME;
+
+
+
 const SongListScreen = () => {
   const [isBluetoothEnabled, setBluetoothEnabled] = useState((async()=>await Blues.isBluetoothEnabled())());
   const [isScanning, setScanning] = useState(false);
@@ -43,16 +52,12 @@ const SongListScreen = () => {
         console.log('>> deviceDiscovered:', device);
         if (device.name === 'MH-M38') {
           console.log('>> deviceDiscovered(): speaker found. start connecting...');
-          const isScanStopped = await Blues.stopScan();
-          if (isScanStopped) {
-            try {
-              const conn = await Blues.connect(device.id);
-              console.log('>> deviceDiscovered: conn=', conn);
-            } catch (e) {
-              console.error('error occurred when connecting:', e);
-            }
-          } else {
-            console.error('>> deviceDiscovered: error: scan could not stop.');
+          await Blues.stopScan();
+          try {
+            const d = await Blues.connect(device.id);
+            console.log('>> deviceDiscovered: device:', d);
+          } catch (e) {
+            console.error('error occurred when connecting:', e);
           }
         }
       });
@@ -61,10 +66,11 @@ const SongListScreen = () => {
       });
       Blues.setEvent("scanStopped", () => {
         console.log('>> scanStopped: scanning stopped.');
-        setScanning(false);
+        // setScanning(false);
       });
       Blues.setEvent("deviceConnected", () => {
         console.log('>> deviceConnected');
+        setScanning(false);
         setConnected(true);
       });
       Blues.setEvent("deviceDisconnected", () => {
@@ -86,8 +92,10 @@ const SongListScreen = () => {
     });
     
     const onUnmount = () => {
-      Blues.removeAllEvents();
-      Music.close();
+      Blues.disconnect().then(() => {
+        Blues.removeAllEvents();
+        Music.close();
+      });
     };
     
     return onUnmount;
@@ -97,7 +105,7 @@ const SongListScreen = () => {
     setScanning(true);
     const pairedDevices = await Blues.getPairedDeviceList();
     console.log('>> startScan(): devices=', pairedDevices);
-    let foundPairedDevice = pairedDevices?.find(d => d.name === 'MH-M38');
+    let foundPairedDevice = pairedDevices?.find(predicate);
     if (foundPairedDevice) {
       await Blues.stopScan();
       setScanning(false);
