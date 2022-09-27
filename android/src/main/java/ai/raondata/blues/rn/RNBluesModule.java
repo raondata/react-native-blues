@@ -356,7 +356,8 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void disconnectA2dp(Promise promise) {
+    public void disconnectA2dp(@Nullable Boolean removeBond, Promise promise) {
+        boolean _removeBond = removeBond != null && removeBond;
         try {
             Method disconnectMethod = BluetoothA2dp.class.getMethod("disconnect", BluetoothDevice.class);
             disconnectMethod.invoke(mA2dp, mDevice.getDevice());
@@ -364,13 +365,14 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             e.printStackTrace();
             promise.reject(BluesException.DISCONNECTION_FAILED.name(), BluesException.DISCONNECTION_FAILED.message(mDevice.getName() + ", " + mDevice.getAddress()));
         }
-
-        try {
-            Method mtdRemoveBond = mDevice.getDevice().getClass().getMethod("removeBond");
-            mtdRemoveBond.invoke(mDevice.getDevice());
-        } catch (Exception e) {
-            e.printStackTrace();
-            promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
+        if (_removeBond) {
+            try {
+                Method mtdRemoveBond = mDevice.getDevice().getClass().getMethod("removeBond");
+                mtdRemoveBond.invoke(mDevice.getDevice());
+            } catch (Exception e) {
+                e.printStackTrace();
+                promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
+            }
         }
         sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
         promise.resolve(true);
