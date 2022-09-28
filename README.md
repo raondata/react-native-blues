@@ -3,11 +3,11 @@
 
 ## Description
 
-**Blues** is a package for connecting **Blue**tooth **S**peaker in React Native application.
+react-native-**blues** is a package for connecting **Blue**tooth **S**peaker in React Native application.
 
-1. Blues uses "A2DP" Bluetooth profile in Android.
-2. Blues supports only Android.
-3. Blues is developed refer to
+1. react-native-blues uses "A2DP" Bluetooth profile in Android.
+2. react-native-blues supports only Android.
+3. react-native-blues is developed refer to
 	- [react-native-bluetooth-classic](https://github.com/kenjdavidson/react-native-bluetooth-classic)
 	- [react-native-a2dp](https://www.npmjs.com/package/react-native-a2dp)
 
@@ -27,8 +27,8 @@ $ npm install react-native-blues
 
 ##### 1.2.1 copy package src
 ```sh
-$ git clone https://github.com/raondata/Blues.git
-$ cp -R ./Blues {/your/reactnative/project}/node_modules/react-native-blues
+$ git clone https://github.com/raondata/react-native-blues.git
+$ cp -R ./react-native-blues {/your/reactnative/project}/node_modules/react-native-blues
 ```
 ##### 1.2.2 add package info to package.json
 ```json
@@ -70,7 +70,7 @@ import RNBlues from 'react-native-blues';
 RNBlues;
 ```
 
-for more usage, please refer to example project (`./examples/RNBluesTest`)
+for more usage, please refer to [example project](https://github.com/glow153/Blues)
 
 ## Troubleshooting
 
@@ -87,7 +87,7 @@ A problem occurred evaluating project ':react-native-blues'.
 ```groovy
 ...
 dependencies {
-    implementation 'com.facebook.react:react-native:0.20.1'
+    implementation 'com.facebook.react:react-native:+'
 }
 ```
 
