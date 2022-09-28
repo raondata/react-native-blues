@@ -11,6 +11,9 @@ react-native-**blues** is a package for connecting **Blue**tooth **S**peaker in 
 	- [react-native-bluetooth-classic](https://github.com/kenjdavidson/react-native-bluetooth-classic)
 	- [react-native-a2dp](https://www.npmjs.com/package/react-native-a2dp)
 
+## Supported OS
+react-native-blues is currently available for Android only.
+
 ---
 
 ## Getting started (updating...)
@@ -34,7 +37,7 @@ $ cp -R ./react-native-blues {/your/reactnative/project}/node_modules/react-nati
 ```json
 "dependencies": {
     ...
-    "react-native-blues": "1.0.0",
+    "react-native-blues": "^0.2.0",
 	...
 ```
 

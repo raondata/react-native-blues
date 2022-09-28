@@ -20,6 +20,7 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
@@ -119,6 +120,19 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             getReactApplicationContext().registerReceiver(mDiscoveryReceiver, DiscoveryReceiver.intentFilter());
         } else {
             Log.w(TAG, "DiscoveryReceiver already registered.");
+        }
+    }
+
+    private NativeDevice getConnectedA2dpDevice() {
+        if (mDevice == null) {
+            if (mA2dp == null) {
+                return null;
+            } else {
+                List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
+                mDevice = new NativeDevice(devices.get(0));
+            }
+        } else {
+            return mDevice;
         }
     }
 
@@ -353,38 +367,33 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void getConnectedA2dpDevice(Promise promise) {
-        promise.resolve(mDevice != null ? mDevice.map() : null);
+        NativeDevice device = getConnectedA2dpDevice();
+        promise.resolve(device == null ? null : device.map());
     }
 
     @ReactMethod
     public void disconnectA2dp(@Nullable Boolean removeBond, Promise promise) {
         boolean _removeBond = removeBond != null && removeBond;
-        if (mDevice == null) {
-            List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
-            if (devices.size() > 0) {
-                mDevice = new NativeDevice(devices.get(0));
-            } else {
-                mDevice = null;
-                promise.reject(BluesException.NO_DEVICE_CONNECTION.name(), BluesException.NO_DEVICE_CONNECTION.message());
-                return;
-            }
-        }
-        try {
-            Method disconnectMethod = BluetoothA2dp.class.getMethod("disconnect", BluetoothDevice.class);
-            disconnectMethod.invoke(mA2dp, mDevice.getDevice());
-        } catch (Exception e) {
-            e.printStackTrace();
-            promise.reject(BluesException.DISCONNECTION_FAILED.name(), BluesException.DISCONNECTION_FAILED.message(mDevice.getName() + ", " + mDevice.getAddress()));
-        }
-        if (_removeBond) {
+        NativeDevice device = getConnectedA2dpDevice();
+        if (device != null) {
             try {
-                Method mtdRemoveBond = mDevice.getDevice().getClass().getMethod("removeBond");
-                mtdRemoveBond.invoke(mDevice.getDevice());
+                Method disconnectMethod = BluetoothA2dp.class.getMethod("disconnect", BluetoothDevice.class);
+                disconnectMethod.invoke(mA2dp, device.getDevice());
             } catch (Exception e) {
                 e.printStackTrace();
-                promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
+                promise.reject(BluesException.DISCONNECTION_FAILED.name(), BluesException.DISCONNECTION_FAILED.message(mDevice.getName() + ", " + mDevice.getAddress()));
+            }
+            if (_removeBond) {
+                try {
+                    Method mtdRemoveBond = device.getDevice().getClass().getMethod("removeBond");
+                    mtdRemoveBond.invoke(device.getDevice());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
+                }
             }
         }
+        mDevice = null;
         sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
         promise.resolve(true);
     }
