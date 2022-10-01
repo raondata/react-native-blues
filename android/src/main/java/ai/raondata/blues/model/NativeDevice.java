@@ -61,6 +61,9 @@ public class NativeDevice implements Mappable {
 
     @Override
     public WritableMap map() {
+        if (mDevice == null) {
+            return null;
+        }
         WritableMap mapped = Arguments.createMap();
 
         mapped.putString("name", mDevice.getName() != null ? mDevice.getName() : mDevice.getAddress());
