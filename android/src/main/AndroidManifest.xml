@@ -3,21 +3,22 @@
           package="ai.raondata.blues.rn">
           
     <!-- required for API 18 - 30 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="30"/>
-
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30"/>
+    
     <!-- API 31+ -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:remove="android:maxSdkVersion"/>
     <!-- 
       refer to https://developer.android.com/guide/topics/connectivity/bluetooth/permissions : 
       The BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT, and BLUETOOTH_SCAN permissions are runtime permissions.
       Therefore, you must explicitly request user approval in your app before you can look for Bluetooth devices...
     -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
 
 </manifest>
   
