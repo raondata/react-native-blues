@@ -190,6 +190,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 public void onDeviceDisconnected() {
                     Log.d(TAG, "onDeviceDisconnected: A2dpConnectionReceiver");
                     sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
+                    mDevice = null;
                     if (mConnectPromise != null) {
                         mConnectPromise.reject(BluesException.ALREADY_CONNECTING.name(), BluesException.ALREADY_CONNECTING.message(mDevice.getName()));
                         mConnectPromise = null;
