@@ -124,20 +124,16 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     private NativeDevice getConnectedA2dpDevice() {
-        if (mDevice != null) {
+        if (mA2dp != null) {
+            List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
+            if (devices.size() > 0) {
+                mDevice = new NativeDevice(devices.get(0));
+            } else {
+                mDevice = null;
+            }
             return mDevice;
         } else {
-            if (mA2dp != null) {
-                List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
-                if (devices.size() > 0) {
-                    mDevice = new NativeDevice(devices.get(0));
-                } else {
-                    mDevice = null;
-                }
-                return mDevice;
-            } else {
-                return null;
-            }
+            return null;
         }
     }
 
