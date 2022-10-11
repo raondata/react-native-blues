@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.os.ParcelUuid;
 
+import androidx.annotation.NonNull;
+
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 
@@ -89,5 +91,11 @@ public class NativeDevice implements Mappable {
         mapped.putMap("extra", extra);
 
         return mapped;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return this.map().toString();
     }
 }

@@ -38,7 +38,7 @@ import ai.raondata.blues.state.BluetoothState;
 public class RNBluesModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
     private static final String TAG = "RNBluesModule";
 
-    public final BluetoothAdapter mAdapter;
+    public BluetoothAdapter mAdapter;
     private BluetoothA2dp mA2dp;
     private NativeDevice mDevice;
 
@@ -52,9 +52,12 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     public RNBluesModule(ReactApplicationContext context) {
         super(context);
+    }
+
+    private void initBlues() {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
-        context.addLifecycleEventListener(this);
-        mAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
+        getReactApplicationContext().addLifecycleEventListener(this);
+        mAdapter.getProfileProxy(getReactApplicationContext(), new BluetoothProfile.ServiceListener() {
             @Override
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
                 if (profile == BluetoothProfile.A2DP) {
@@ -69,6 +72,8 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 }
             }
         }, BluetoothProfile.A2DP);
+        registerBluetoothStateReceiver();
+        registerConnectionStateReceiver();
     }
 
     @Override
@@ -229,7 +234,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         }
     }
 
-    private void close() {
+    private void closeBlues() {
         unregisterBluetoothStateReceiver();
         unregisterConnectionStateReceiver();
         mAdapter.cancelDiscovery();
@@ -339,6 +344,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
             // dhpark: Bluetooth device MAC address => get Device instance
             BluetoothDevice device = mAdapter.getRemoteDevice(address);
             if (device != null) {
+                Log.d(TAG, "remote device: " + device.getName() + ", " + device.getAddress());
                 mDevice = new NativeDevice(device);
 
                 // bond device
@@ -359,11 +365,10 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                     e.printStackTrace();
                     mConnectPromise.reject(BluesException.CONNECTION_FAILED.name(), BluesException.CONNECTION_FAILED.message(device.getName()));
                 }
-                mConnectPromise = null;
             } else {
                 mConnectPromise.reject(BluesException.BLUETOOTH_DEVICE_NOT_FOUND.name(), BluesException.BLUETOOTH_DEVICE_NOT_FOUND.message());
-                mConnectPromise = null;
             }
+            mConnectPromise = null;
         }
     }
 
@@ -377,6 +382,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     public void disconnectA2dp(@Nullable Boolean removeBond, Promise promise) {
         boolean _removeBond = removeBond != null && removeBond;
         NativeDevice device = getConnectedA2dpDevice();
+        Log.d(TAG, "disconnectA2dp(): connected device: " + device);
         if (device != null) {
             try {
                 Method disconnectMethod = BluetoothA2dp.class.getMethod("disconnect", BluetoothDevice.class);
@@ -402,8 +408,8 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void close(Promise promise) {
-        close();
-        promise.resolve(true);
+        disconnectA2dp(false, promise);
+        closeBlues();
     }
     /* ============================= React methods ============================= */
 
@@ -414,27 +420,22 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @Override
     public void initialize() {
         super.initialize();
-        registerBluetoothStateReceiver();
-        registerConnectionStateReceiver();
+        initBlues();
     }
 
     @Override
     public void onHostResume() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostResume()");
-//        registerBluetoothStateReceiver();
-//        registerConnectionStateReceiver();
     }
 
     @Override
     public void onHostPause() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostPause()");
-//        unregisterBluetoothStateReceiver();
-//        unregisterConnectionStateReceiver();
     }
 
     @Override
     public void onHostDestroy() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostDestroy()");
-        close();
+        closeBlues();
     }
 }
