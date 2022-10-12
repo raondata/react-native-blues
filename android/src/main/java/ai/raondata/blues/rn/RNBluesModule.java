@@ -131,6 +131,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     private NativeDevice getConnectedA2dpDevice() {
         if (mA2dp != null) {
             List<BluetoothDevice> devices = mA2dp.getConnectedDevices();
+            Log.d(TAG, "getConnectedA2dpDevice() - connectedDevices:" + devices.toString());
             if (devices.size() > 0) {
                 mDevice = new NativeDevice(devices.get(0));
             } else {
@@ -358,7 +359,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                 }
                 // connect device
                 try {
-                    Method connectMethod = BluetoothA2dp.class.getMethod("connect", BluetoothDevice.class);
+                    Method connectMethod = mA2dp.getClass().getMethod("connect", BluetoothDevice.class);
                     connectMethod.invoke(mA2dp, device);
                     mConnectPromise.resolve(mDevice.map());
                 } catch (Exception e) {

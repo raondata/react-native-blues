@@ -97,7 +97,9 @@ export const getPairedDeviceList = async () => {
 };
 
 export const getConnectedDevice = async () => {
-  return await RNBlues.getConnectedA2dpDevice();
+  const connectedDevice = await RNBlues.getConnectedA2dpDevice();
+  log.d('getConnectedDevice:', connectedDevice);
+  return connectedDevice;
 }
 
 export const isConnected = async () => {
