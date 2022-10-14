@@ -1,2 +1,2 @@
-export * as Blues from './src/Blues';
-
+import * as Blues from './src/Blues';
+export default Blues;
