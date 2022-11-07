@@ -6,7 +6,7 @@ export const isEmpty = (o) => {
   return !hasValue(o);
 };
 
-export const tryCall = function (fn: Function, ...args) {
+export const tryCall = function (fn?: Function, ...args) {
   return fn instanceof Function && fn.apply(this, args);
 };
 

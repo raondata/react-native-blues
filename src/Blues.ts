@@ -74,7 +74,7 @@ export const checkBluetoothAdapter = async () => {
 }
 
 
-export const enableBluetooth = async (onAlreadyEnabled: Function) => {
+export const enableBluetooth = async (onAlreadyEnabled?: Function) => {
   let enabled = true;
   try {
     enabled = await RNBlues.requestBluetoothEnabled();
