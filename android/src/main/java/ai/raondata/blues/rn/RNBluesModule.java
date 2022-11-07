@@ -238,8 +238,12 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     private void closeBlues() {
         unregisterBluetoothStateReceiver();
         unregisterConnectionStateReceiver();
-        mAdapter.cancelDiscovery();
-        mAdapter.closeProfileProxy(BluetoothA2dp.A2DP, mA2dp);
+        if (mAdapter != null) {
+            mAdapter.cancelDiscovery();
+            mAdapter.closeProfileProxy(BluetoothA2dp.A2DP, mA2dp);
+            mAdapter = null;
+
+        }
     }
 
     /* ============================= React methods ============================= */
