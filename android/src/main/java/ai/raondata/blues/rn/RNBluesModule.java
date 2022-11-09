@@ -48,8 +48,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     private Promise mConnectPromise;
 
-    private Timer scanTimer;
-
     public RNBluesModule(ReactApplicationContext context) {
         super(context);
     }
@@ -429,8 +427,18 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @Override
+    public void onCatalystInstanceDestroy() {
+        super.onCatalystInstanceDestroy();
+        Log.d(TAG, "************LifecycleEventListener************ : onCatalystInstanceDestroy()");
+        closeBlues();
+    }
+
+    @Override
     public void onHostResume() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostResume()");
+        if (mAdapter == null) {
+            initBlues();
+        }
     }
 
     @Override
@@ -441,6 +449,5 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @Override
     public void onHostDestroy() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostDestroy()");
-        closeBlues();
     }
 }

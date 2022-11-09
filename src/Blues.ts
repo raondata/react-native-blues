@@ -1,8 +1,7 @@
 import { LogBox, NativeEventEmitter, NativeModules } from 'react-native';
+import { hasValue, isObject, tryCall } from './util';
 const { RNBlues } = NativeModules;
 LogBox.ignoreLogs(['new NativeEventEmitter']);
-
-import { hasValue, isObject, tryCall } from './util';
 
 const eventEmitter = new NativeEventEmitter(RNBlues);
 const eventMap = {};
