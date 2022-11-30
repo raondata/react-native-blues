@@ -403,6 +403,9 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
                     promise.reject(BluesException.REMOVE_BOND_FAILED.name(), BluesException.REMOVE_BOND_FAILED.message());
                 }
             }
+        } else {
+            Log.d(TAG, "A2dp profile has no connected device.");
+            promise.resolve(false);
         }
         mDevice = null;
         sendRNEvent(EventType.DEVICE_DISCONNECTED, null);
