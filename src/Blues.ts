@@ -1,4 +1,5 @@
 import { LogBox, NativeEventEmitter, NativeModules } from 'react-native';
+import { NativeDevice } from './model';
 import { hasValue, isObject, tryCall } from './util';
 const { RNBlues } = NativeModules;
 LogBox.ignoreLogs(['new NativeEventEmitter']);
@@ -17,7 +18,7 @@ const log = {
   e (...s) {
     console.error('[BLUES]', ...s);
   },
-}
+};
 
 export const setDebugMode = (d: boolean) => {
   debugMode = d;
@@ -60,20 +61,19 @@ export const removeAllEvents = () => {
   });
 };
 
-export const isBluetoothAvailable = async () => {
+export const isBluetoothAvailable = async (): Promise<boolean> => {
   return await RNBlues.isBluetoothAvailable();
-}
+};
 
-export const isBluetoothEnabled = async () => {
+export const isBluetoothEnabled = async (): Promise<boolean> => {
   return await RNBlues.isBluetoothEnabled();
-}
+};
 
-export const checkBluetoothAdapter = async () => {
+export const checkBluetoothAdapter = async (): Promise<boolean> => {
   return await RNBlues.checkBluetoothAdapter();
-}
+};
 
-
-export const enableBluetooth = async (onAlreadyEnabled?: Function) => {
+export const enableBluetooth = async (onAlreadyEnabled?: Function): Promise<boolean> => {
   let enabled = true;
   try {
     enabled = await RNBlues.requestBluetoothEnabled();
@@ -90,21 +90,21 @@ export const enableBluetooth = async (onAlreadyEnabled?: Function) => {
   } else {
     return true;
   }
-}
+};
 
-export const disableBluetooth = async () => {
+export const disableBluetooth = async (): Promise<boolean> => {
   return await RNBlues.disableBluetooth();
-}
+};
 
-export const getPairedDeviceList = async () => {
+export const getPairedDeviceList = async (): Promise<NativeDevice[]> => {
   return await RNBlues.deviceList();
 };
 
-export const getConnectedDevice = async () => {
+export const getConnectedDevice = async (): Promise<NativeDevice[]> => {
   const connectedDevice = await RNBlues.getConnectedA2dpDevice();
   log.d('getConnectedDevice:', connectedDevice);
   return connectedDevice;
-}
+};
 
 export const isConnected = async () => {
   const device = await RNBlues.getConnectedA2dpDevice();
@@ -124,12 +124,12 @@ export const connect = async (deviceId) => {
   return await RNBlues.connectA2dp(deviceId);
 };
 
-export const disconnect = async (removeBond: Boolean) => {
-  await RNBlues.disconnectA2dp(removeBond);
+export const disconnect = async (removeBond: boolean) => {
+  return await RNBlues.disconnectA2dp(removeBond);
 };
 
 export const close = () => {
   RNBlues.close();
-}
+};
 
 export default RNBlues;
