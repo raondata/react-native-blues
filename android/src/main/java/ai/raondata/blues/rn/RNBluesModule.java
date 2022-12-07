@@ -38,7 +38,7 @@ import ai.raondata.blues.state.BluetoothState;
 public class RNBluesModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
     private static final String TAG = "RNBluesModule";
 
-    public BluetoothAdapter mAdapter;
+    private BluetoothAdapter mAdapter;
     private BluetoothA2dp mA2dp;
     private NativeDevice mDevice;
 
@@ -86,8 +86,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     private boolean isBluetoothAvailable() {return mAdapter != null;}
-    private boolean isBluetoothEnabled() {return mAdapter.isEnabled();}
-    private boolean checkBluetoothAdapter() {return isBluetoothAvailable() && isBluetoothEnabled();}
+    private boolean isBluetoothEnabled() {return mAdapter != null && mAdapter.isEnabled();}
 
     private void registerDiscoveryReceiver(final Promise promise) {
         Log.d(TAG, "registerDiscoveryReceiver()");
@@ -257,11 +256,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void checkBluetoothAdapter(Promise promise) {
-        promise.resolve(checkBluetoothAdapter());
-    }
-
-    @ReactMethod
     public void requestBluetoothEnabled(Promise promise) {
         sendRNEvent(EventType.BLUETOOTH_STATE_CHANGING, null);
         if (!isBluetoothAvailable()) {
@@ -291,7 +285,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void deviceList(Promise promise) {
-        if (!checkBluetoothAdapter()) {
+        if (!isBluetoothEnabled()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
         } else {
             WritableArray bonded = Arguments.createArray();
@@ -313,7 +307,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
         // => react native callback은 1회 호출만 가능
 
         Log.d(TAG, "::::: startScan :::::");
-        if (!checkBluetoothAdapter()) {
+        if (!isBluetoothEnabled()) {
             Log.e(TAG, "bluetooth adapter not available");
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
 //            return false;
@@ -338,7 +332,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
 
     @ReactMethod
     public void connectA2dp(String address, Promise promise) {
-        if (!checkBluetoothAdapter()) {
+        if (!isBluetoothEnabled()) {
             promise.reject(BluesException.BLUETOOTH_NOT_ENABLED.name(), BluesException.BLUETOOTH_NOT_ENABLED.message());
         } else {
             unregisterDiscoveryReceiver();
@@ -440,6 +434,7 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     public void onHostResume() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostResume()");
         if (mAdapter == null) {
+            Log.d(TAG, "onHostResume: mAdapter == null --> initBlues()");
             initBlues();
         }
     }
@@ -452,5 +447,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @Override
     public void onHostDestroy() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostDestroy()");
+        closeBlues();
     }
 }

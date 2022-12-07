@@ -69,10 +69,6 @@ export const isBluetoothEnabled = async (): Promise<boolean> => {
   return await RNBlues.isBluetoothEnabled();
 };
 
-export const checkBluetoothAdapter = async (): Promise<boolean> => {
-  return await RNBlues.checkBluetoothAdapter();
-};
-
 export const enableBluetooth = async (onAlreadyEnabled?: Function): Promise<boolean> => {
   let enabled = true;
   try {
@@ -100,7 +96,7 @@ export const getPairedDeviceList = async (): Promise<NativeDevice[]> => {
   return await RNBlues.deviceList();
 };
 
-export const getConnectedDevice = async (): Promise<NativeDevice[]> => {
+export const getConnectedDevice = async (): Promise<NativeDevice> => {
   const connectedDevice = await RNBlues.getConnectedA2dpDevice();
   log.d('getConnectedDevice:', connectedDevice);
   return connectedDevice;
