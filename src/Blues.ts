@@ -128,4 +128,8 @@ export const close = () => {
   RNBlues.close();
 };
 
+export const emitBluesEvent = (eventName: string) => {
+  eventEmitter.emit(eventName);
+};
+
 export default RNBlues;
