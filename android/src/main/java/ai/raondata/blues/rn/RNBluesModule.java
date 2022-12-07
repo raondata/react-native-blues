@@ -15,6 +15,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -256,6 +257,16 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
+    public void getConnectionState(String address, Promise promise) {
+        if (isBluetoothEnabled()) {
+            BluetoothDevice device = mAdapter.getRemoteDevice(address);
+            promise.resolve(mA2dp.getConnectionState(device));
+        } else {
+            promise.reject(BluesException.BLUETOOTH_NOT_AVAILABLE.name(), BluesException.BLUETOOTH_NOT_AVAILABLE.message());
+        }
+    }
+
+    @ReactMethod
     public void requestBluetoothEnabled(Promise promise) {
         sendRNEvent(EventType.BLUETOOTH_STATE_CHANGING, null);
         if (!isBluetoothAvailable()) {
@@ -447,6 +458,6 @@ public class RNBluesModule extends ReactContextBaseJavaModule implements Lifecyc
     @Override
     public void onHostDestroy() {
         Log.d(TAG, "************LifecycleEventListener************ : onHostDestroy()");
-        closeBlues();
+//        closeBlues();
     }
 }

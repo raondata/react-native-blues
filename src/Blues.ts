@@ -1,6 +1,7 @@
 import { LogBox, NativeEventEmitter, NativeModules } from 'react-native';
 import { NativeDevice } from './model';
-import { hasValue, isObject, tryCall } from './util';
+import { bluesEventHandler } from './types';
+import { entries, hasValue, isObject, tryCall } from './util';
 const { RNBlues } = NativeModules;
 LogBox.ignoreLogs(['new NativeEventEmitter']);
 
@@ -42,7 +43,7 @@ export const getEventHandler = (eventName) => {
   return isObject(eventMap) && eventMap[eventName];
 };
 
-export const setEvent = (eventName: string, handler: (event: any) => void) => {
+export const setEvent = (eventName: string, handler: bluesEventHandler) => {
   if (getRegisteredEventNames().includes(eventName)) {
     log.d(`setEvent: event ${eventName} already registered.`);
     removeBluesEvent(eventName);
@@ -51,8 +52,8 @@ export const setEvent = (eventName: string, handler: (event: any) => void) => {
   return eventMap[eventName];
 };
 
-export const setEvents = (events) => {
-  Object.entries(events).forEach(([k, v]) => setEvent(k, v));
+export const setEvents = (events: { [s: string]: bluesEventHandler; }) => {
+  entries(events).forEach(([k, v]) => setEvent(k, v));
 }
 
 export const removeAllEvents = () => {
@@ -93,13 +94,21 @@ export const disableBluetooth = async (): Promise<boolean> => {
 };
 
 export const getPairedDeviceList = async (): Promise<NativeDevice[]> => {
-  return await RNBlues.deviceList();
+  const devices = await RNBlues.deviceList();
+  log.d('getPairedDeviceList: devices:', devices);
+  return devices.map(d => new NativeDevice(d));
 };
 
-export const getConnectedDevice = async (): Promise<NativeDevice> => {
+export const getConnectedDevice = async (): Promise<NativeDevice | undefined> => {
   const connectedDevice = await RNBlues.getConnectedA2dpDevice();
-  log.d('getConnectedDevice:', connectedDevice);
-  return connectedDevice;
+  if (connectedDevice) {
+    const nativeDevice = new NativeDevice(connectedDevice);
+    log.d('getConnectedDevice:', nativeDevice);
+    return nativeDevice;
+  } else {
+    log.d('there is no connected device.');
+    return undefined;
+  }
 };
 
 export const isConnected = async () => {
